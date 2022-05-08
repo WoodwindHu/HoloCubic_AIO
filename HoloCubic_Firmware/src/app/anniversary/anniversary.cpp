@@ -63,6 +63,9 @@ static void read_config(AN_Config *cfg)
         cfg->target_date[1].tm_year = 2025; 
         cfg->target_date[1].tm_mon = 7; 
         cfg->target_date[1].tm_mday = 4; 
+        cfg->current_date.tm_year = 2022; 
+        cfg->current_date.tm_mon = 1; 
+        cfg->current_date.tm_mday = 1; 
         write_config(cfg);
         Serial.printf("Write config successful\n");
     }
