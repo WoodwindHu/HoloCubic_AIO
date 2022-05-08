@@ -114,7 +114,7 @@ int AppController::main_process(ImuAction *act_info)
     {
         send_to(CTRL_NAME, CTRL_NAME, APP_MESSAGE_WIFI_DISCONN, 0, NULL);
     }
-    
+
     // 重连mqtt
     if (1 == m_mqtt_status && doDelayMillisTime(MQTT_ALIVE_CYCLE, &m_preWifiReqMillis, false))
     {
@@ -295,7 +295,7 @@ bool AppController::wifi_event(APP_MESSAGE_TYPE type)
         // CONN_ERROR == g_network.end_conn_wifi() ||
         if (false == m_wifi_status)
         {
-            g_network.start_conn_wifi(sys_cfg.ssid_0.c_str(), sys_cfg.password_0.c_str());
+            g_network.start_conn_wifi(sys_cfg.ssid_0.c_str(), sys_cfg.password_0.c_str(), sys_cfg.username_0.c_str());
             m_wifi_status = true;
         }
         m_preWifiReqMillis = millis();

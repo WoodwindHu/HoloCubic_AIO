@@ -28,6 +28,7 @@
 #include "app/weather_old/weather_old.h"
 #include "app/anniversary/anniversary.h"
 #include "app/heartbeat/heartbeat.h"
+#include "app/tomato/tomato.h"
 
 #include <SPIFFS.h>
 #include <esp32-hal.h>
@@ -107,18 +108,19 @@ void setup()
     app_controller->init();
     // 将APP"安装"到controller里
     app_controller->app_install(&weather_app);
-    app_controller->app_install(&weather_old_app);
-    app_controller->app_install(&picture_app);
-    app_controller->app_install(&media_app);
-    app_controller->app_install(&screen_share_app);
-    app_controller->app_install(&file_manager_app);
+    // app_controller->app_install(&weather_old_app);
+    // app_controller->app_install(&picture_app);
+    // app_controller->app_install(&media_app);
+    // app_controller->app_install(&screen_share_app);
+    // app_controller->app_install(&file_manager_app);
     app_controller->app_install(&server_app);
-    app_controller->app_install(&idea_app);
-    app_controller->app_install(&bilibili_app);
-    app_controller->app_install(&settings_app);
+    // app_controller->app_install(&idea_app);
+    // app_controller->app_install(&bilibili_app);
+    // app_controller->app_install(&settings_app);
     app_controller->app_install(&game_2048_app);
     app_controller->app_install(&anniversary_app);
     app_controller->app_install(&heartbeat_app);
+    app_controller->app_install(&tomato_app);
 
     // 优先显示屏幕 加快视觉上的开机时间
     app_controller->main_process(&mpu.action_info);

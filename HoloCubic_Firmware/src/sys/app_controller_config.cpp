@@ -27,8 +27,8 @@ void AppController::read_config(SysUtilConfig *cfg)
     else
     {
         // 解析数据
-        char *param[11] = {0};
-        analyseParam(info, 11, param);
+        char *param[12] = {0};
+        analyseParam(info, 12, param);
         cfg->ssid_0 = param[0];
         cfg->password_0 = param[1];
         cfg->ssid_1 = param[2];
@@ -40,6 +40,7 @@ void AppController::read_config(SysUtilConfig *cfg)
         cfg->rotation = atol(param[8]);
         cfg->auto_calibration_mpu = atol(param[9]);
         cfg->mpu_order = atol(param[10]);
+        cfg->username_0 = param[11];
     }
 }
 
@@ -73,6 +74,7 @@ void AppController::write_config(SysUtilConfig *cfg)
     memset(tmp, 0, 25);
     snprintf(tmp, 25, "%u\n", cfg->mpu_order);
     w_data += tmp;
+    w_data = w_data + cfg->username_0 + "\n";
     g_flashCfg.writeFile(APP_CTRL_CONFIG_PATH, w_data.c_str());
 
     // 立即生效相关配置
@@ -284,6 +286,10 @@ void AppController::deal_config(APP_MESSAGE_TYPE type,
         {
             snprintf(value, 32, "%s", sys_cfg.password_0.c_str());
         }
+        else if (!strcmp(key, "username_0"))
+        {
+            snprintf(value, 32, "%s", sys_cfg.username_0.c_str());
+        }
         else if (!strcmp(key, "ssid_1"))
         {
             snprintf(value, 32, "%s", sys_cfg.ssid_1.c_str());
@@ -343,6 +349,10 @@ void AppController::deal_config(APP_MESSAGE_TYPE type,
         else if (!strcmp(key, "password_0"))
         {
             sys_cfg.password_0 = value;
+        }
+        else if (!strcmp(key, "username_0"))
+        {
+            sys_cfg.username_0 = value;
         }
         else if (!strcmp(key, "ssid_1"))
         {

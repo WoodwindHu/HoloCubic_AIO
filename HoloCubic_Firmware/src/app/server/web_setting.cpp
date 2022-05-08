@@ -53,7 +53,8 @@ String file_size(int bytes)
 
 #define SYS_SETTING "<form method=\"GET\" action=\"saveSysConf\">"                                                                                                                                                                                                      \
                     "<label class=\"input\"><span>WiFi SSID_0(2.4G)</span><input type=\"text\"name=\"ssid_0\"value=\"%s\"></label>"                                                                                                                                     \
-                    "<label class=\"input\"><span>WiFi Passwd_0</span><input type=\"text\"name=\"password_0\"value=\"%s\"></label>"                                                                                                                                     \
+                    "<label class=\"input\"><span>WiFi Passwd_0</span><input type=\"text\"name=\"password_0\"value=\"%s\"></label>"                                                                                                                                  \
+                    "<label class=\"input\"><span>WiFi Username_0</span><input type=\"text\"name=\"username_0\"value=\"%s\"></label>"                                                                                                                                       \
                     "<label class=\"input\"><span>功耗控制（0低发热 1性能优先）</span><input type=\"text\"name=\"power_mode\"value=\"%s\"></label>"                                                                                                        \
                     "<label class=\"input\"><span>屏幕亮度 (值为1~100)</span><input type=\"text\"name=\"backLight\"value=\"%s\"></label>"                                                                                                                         \
                     "<label class=\"input\"><span>屏幕方向 (0~5可选)</span><input type=\"text\"name=\"rotation\"value=\"%s\"></label>"                                                                                                                            \
@@ -190,6 +191,7 @@ void sys_setting()
     char buf[2048];
     char ssid_0[32];
     char password_0[32];
+    char username_0[32];
     char power_mode[32];
     char backLight[32];
     char rotation[32];
@@ -205,6 +207,8 @@ void sys_setting()
                             (void *)"ssid_0", ssid_0);
     app_controller->send_to(SERVER_APP_NAME, "AppCtrl", APP_MESSAGE_GET_PARAM,
                             (void *)"password_0", password_0);
+    app_controller->send_to(SERVER_APP_NAME, "AppCtrl", APP_MESSAGE_GET_PARAM,
+                            (void *)"username_0", username_0);
     app_controller->send_to(SERVER_APP_NAME, "AppCtrl", APP_MESSAGE_GET_PARAM,
                             (void *)"power_mode", power_mode);
     app_controller->send_to(SERVER_APP_NAME, "AppCtrl", APP_MESSAGE_GET_PARAM,
@@ -226,14 +230,14 @@ void sys_setting()
     if (0 == cfg.auto_calibration_mpu)
     {
         sprintf(buf, SYS_SETTING,
-                ssid_0, password_0,
+                ssid_0, password_0, username_0, 
                 power_mode, backLight, rotation,
                 mpu_order, "checked=\"checked\"", "");
     }
     else
     {
         sprintf(buf, SYS_SETTING,
-                ssid_0, password_0,
+                ssid_0, password_0, username_0, 
                 power_mode, backLight, rotation,
                 mpu_order, "", "checked=\"checked\"");
     }
@@ -436,6 +440,10 @@ void saveSysConf(void)
                             APP_MESSAGE_SET_PARAM,
                             (void *)"password_0",
                             (void *)server.arg("password_0").c_str());
+    app_controller->send_to(SERVER_APP_NAME, "AppCtrl",
+                            APP_MESSAGE_SET_PARAM,
+                            (void *)"username_0",
+                            (void *)server.arg("username_0").c_str());
     app_controller->send_to(SERVER_APP_NAME, "AppCtrl",
                             APP_MESSAGE_SET_PARAM,
                             (void *)"power_mode",

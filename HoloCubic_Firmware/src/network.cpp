@@ -1,11 +1,13 @@
 #include "network.h"
 #include "common.h"
 #include "HardwareSerial.h"
+#include "IPGWClient.h"
 
 IPAddress local_ip(192, 168, 4, 2); // Set your server's fixed IP address here
 IPAddress gateway(192, 168, 4, 2);  // Set your network Gateway usually your Router base address
 IPAddress subnet(255, 255, 255, 0); // Set your network sub-network mask here
-IPAddress dns(192, 168, 4, 1);      // Set your network DNS usually your Router base address
+IPAddress dns(8,8,8,8);      // Set your network DNS usually your Router base address
+IPAddress dns2(114,114,114,114);      // Set your network DNS usually your Router base address
 
 const char *AP_SSID = "HoloCubic_AIO"; //热点名称
 const char *HOST_NAME = "HoloCubic";   //主机名
@@ -18,7 +20,7 @@ Network::Network()
 {
     m_preDisWifiConnInfoMillis = 0;
     WiFi.enableSTA(false);
-    WiFi.enableAP(false);
+    WiFi.enableAP(false);   
 }
 
 void Network::search_wifi(void)
@@ -47,7 +49,7 @@ void Network::search_wifi(void)
     }
 }
 
-boolean Network::start_conn_wifi(const char *ssid, const char *password)
+boolean Network::start_conn_wifi(const char *ssid, const char *password, const char *username = NULL)
 {
     if (WiFi.status() == WL_CONNECTED)
     {
@@ -64,8 +66,31 @@ boolean Network::start_conn_wifi(const char *ssid, const char *password)
     WiFi.enableSTA(true);
     // 修改主机名
     WiFi.setHostname(HOST_NAME);
-    WiFi.begin(ssid, password);
-    m_preDisWifiConnInfoMillis = millis();
+    if (strcmp(ssid, "PKU")) {
+        WiFi.begin(ssid, password);
+        m_preDisWifiConnInfoMillis = millis();
+        Serial.println(F("Wifi connected!"));
+    } else { // 校园网
+        WiFi.begin(ssid);
+        m_preDisWifiConnInfoMillis = millis();
+        while (WiFi.status() != WL_CONNECTED)
+        {
+            Serial.println("Trying to connect. Status is " + String(WiFi.status()));
+            delay(500);
+        }
+        Serial.println("Connected to Wireless PKU!");
+        if (!WiFi.config((uint32_t)0x00000000, (uint32_t)0x00000000, (uint32_t)0x00000000, dns, dns2))
+        { //WiFi.config(ip, gateway, subnet, dns1, dns2);
+            Serial.println("WiFi STATION Failed to configure Correctly");
+        }
+        String mac = WiFi.macAddress();
+        Serial.println("mac address is: " + mac);
+        IPGWClient clt(username, password, mac);
+        while (clt.connect() != IPGW_SUCC) {    
+            delay(2000);
+        }
+        Serial.println(F("IPGW logined!"));
+    }
 
     // if (!WiFi.config(local_ip, gateway, subnet, dns))
     // { //WiFi.config(ip, gateway, subnet, dns1, dns2);

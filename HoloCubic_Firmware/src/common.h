@@ -53,6 +53,7 @@ struct SysUtilConfig
 {
     String ssid_0;
     String password_0;
+    String username_0;
     String ssid_1;
     String password_1;
     String ssid_2;

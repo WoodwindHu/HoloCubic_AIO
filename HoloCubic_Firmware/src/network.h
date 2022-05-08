@@ -56,7 +56,7 @@ private:
 public:
     Network();
     void search_wifi(void);
-    boolean start_conn_wifi(const char *ssid, const char *password);
+    boolean start_conn_wifi(const char *ssid, const char *password, const char *username);
     boolean end_conn_wifi(void);
     boolean close_wifi(void);
     boolean open_ap(const char *ap_ssid = AP_SSID, const char *ap_password = NULL);
