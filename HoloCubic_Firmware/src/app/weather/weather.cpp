@@ -13,13 +13,18 @@
 #define WEATHER_NOW_API_UPDATE "https://yiketianqi.com/api?unescape=1&version=v6&appid=%s&appsecret=%s&city=%s"
 #define WEATHER_DALIY_API "https://www.yiketianqi.com/free/week?unescape=1&appid=%s&appsecret=%s&city=%s"
 #define TIME_API "http://api.m.taobao.com/rest/api3.do?api=mtop.common.gettimestamp"
-#define WEATHER_PAGE_SIZE 2
+#define WEATHER_PAGE_SIZE 3
 #define UPDATE_WEATHER 0x01       // 更新天气
 #define UPDATE_DALIY_WEATHER 0x02 // 更新每天天气
 #define UPDATE_TIME 0x04          // 更新时间
+#define MAX_ANNIVERSARY_CNT 3
+
+bool tmfromString(const char *date_str, struct tm *date);
+int dateDiff(struct tm* date1, struct tm* date2);
 
 // 天气的持久化配置
 #define WEATHER_CONFIG_PATH "/weather.cfg"
+#define ANNIVERSARY_CONFIG_PATH "/anniversary.cfg"
 struct WT_Config
 {
     String tianqi_appid;                 // tianqiapid 的 appid
@@ -27,6 +32,14 @@ struct WT_Config
     String tianqi_addr;                  // tianqiapid 的地址（填中文）
     unsigned long weatherUpdataInterval; // 天气更新的时间间隔(s)
     unsigned long timeUpdataInterval;    // 日期时钟更新的时间间隔(s)
+};
+
+struct AN_Config
+{
+    unsigned long anniversary_cnt; // 事件个数    
+    String event_name[MAX_ANNIVERSARY_CNT]; // 事件名称
+    struct tm target_date[MAX_ANNIVERSARY_CNT]; // 目标日  
+    struct tm current_date; 
 };
 
 static void write_config(WT_Config *cfg)
@@ -46,7 +59,7 @@ static void write_config(WT_Config *cfg)
     g_flashCfg.writeFile(WEATHER_CONFIG_PATH, w_data.c_str());
 }
 
-static void read_config(WT_Config *cfg)
+static void read_config(WT_Config *cfg, AN_Config *an_cfg)
 {
     // 如果有需要持久化配置文件 可以调用此函数将数据存在flash中
     // 配置文件名最好以APP名为开头 以".cfg"结尾，以免多个APP读取混乱
@@ -72,6 +85,18 @@ static void read_config(WT_Config *cfg)
         cfg->weatherUpdataInterval = atol(param[3]);
         cfg->timeUpdataInterval = atol(param[4]);
     }
+    size = g_flashCfg.readFile(ANNIVERSARY_CONFIG_PATH, (uint8_t *)info);
+    info[size] = 0;
+    // 解析数据
+    char *param[MAX_ANNIVERSARY_CNT*2+2] = {0};
+    analyseParam(info, MAX_ANNIVERSARY_CNT*2+2, param);
+    an_cfg->anniversary_cnt = atol(param[0]);
+    for (int i = 0; i < MAX_ANNIVERSARY_CNT; ++i) 
+    {
+        an_cfg->event_name[i] = param[2*i+1];
+        tmfromString(param[2*i+2], &(an_cfg->target_date[i]));
+    }
+    tmfromString(param[MAX_ANNIVERSARY_CNT*2+1], &(an_cfg->current_date));
 }
 
 struct WeatherAppRunData
@@ -90,9 +115,11 @@ struct WeatherAppRunData
 
     ESP32Time g_rtc; // 用于时间解码
     Weather wea;     // 保存天气状况
+    AN_INFO anniInfo; // 保存纪念日状况
 };
 
 static WT_Config cfg_data;
+static AN_Config anni_cfg_data;
 static WeatherAppRunData *run_data = NULL;
 
 enum wea_event_Id
@@ -270,7 +297,7 @@ static int weather_init(void)
     tft->setSwapBytes(true);
     weather_gui_init();
     // 获取配置信息
-    read_config(&cfg_data);
+    read_config(&cfg_data, &anni_cfg_data);
 
     // 初始化运行时参数
     run_data = (WeatherAppRunData *)calloc(1, sizeof(WeatherAppRunData));
@@ -355,6 +382,20 @@ static void weather_process(AppController *sys,
     {
         // 仅在切换界面时获取一次未来天气
         display_curve(run_data->wea.daily_max, run_data->wea.daily_min, anim_type);
+        delay(300);
+    }
+    else if (run_data->clock_page == 2)
+    {
+        run_data->anniInfo.event_name0 = anni_cfg_data.event_name[0].c_str();
+        run_data->anniInfo.event_name1 = anni_cfg_data.event_name[1].c_str();
+        run_data->anniInfo.event_name2 = anni_cfg_data.event_name[2].c_str();
+        tm tmp_tm = run_data->g_rtc.getTimeStruct();
+        tmp_tm.tm_year += 1900;
+        tmp_tm.tm_mon += 1;
+        run_data->anniInfo.date_diff[0] = dateDiff(&tmp_tm, &(anni_cfg_data.target_date[0]));
+        run_data->anniInfo.date_diff[1] = dateDiff(&tmp_tm, &(anni_cfg_data.target_date[1]));
+        run_data->anniInfo.date_diff[2] = dateDiff(&tmp_tm, &(anni_cfg_data.target_date[2]));
+        display_anni(&(run_data->anniInfo), anim_type);
         delay(300);
     }
 }
@@ -520,7 +561,7 @@ static void weather_message_handle(const char *from, const char *to,
     break;
     case APP_MESSAGE_READ_CFG:
     {
-        read_config(&cfg_data);
+        read_config(&cfg_data, &anni_cfg_data);
     }
     break;
     case APP_MESSAGE_WRITE_CFG:

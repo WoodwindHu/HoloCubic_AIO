@@ -111,7 +111,9 @@ String file_size(int bytes)
                         "<label class=\"input\"><span>事件0</span><input type=\"text\"name=\"event_name0\"value=\"%s\"></label>"                            \
                         "<label class=\"input\"><span>日期0</span><input type=\"text\"name=\"target_date0\"value=\"%s\"></label>"                                                                                             \
                         "<label class=\"input\"><span>事件1</span><input type=\"text\"name=\"event_name1\"value=\"%s\"></label>"                            \
-                        "<label class=\"input\"><span>日期1</span><input type=\"text\"name=\"target_date1\"value=\"%s\"></label>"                 \
+                        "<label class=\"input\"><span>日期1</span><input type=\"text\"name=\"target_date1\"value=\"%s\"></label>"                                                                                             \
+                        "<label class=\"input\"><span>事件2</span><input type=\"text\"name=\"event_name2\"value=\"%s\"></label>"                            \
+                        "<label class=\"input\"><span>日期2</span><input type=\"text\"name=\"target_date2\"value=\"%s\"></label>"                 \
                         "</label><input class=\"btn\" type=\"submit\" name=\"submit\" value=\"保存\"></form>"
 
 void init_page_header()
@@ -412,6 +414,8 @@ void anniversary_setting()
     char target_date0[32];
     char event_name1[32];
     char target_date1[32];
+    char event_name2[32];
+    char target_date2[32];
     // 读取数据
     app_controller->send_to(SERVER_APP_NAME, "Anniversary", APP_MESSAGE_READ_CFG,
                             NULL, NULL);
@@ -423,7 +427,11 @@ void anniversary_setting()
                             (void *)"event_name1", event_name1);
     app_controller->send_to(SERVER_APP_NAME, "Anniversary", APP_MESSAGE_GET_PARAM,
                             (void *)"target_date1", target_date1);
-    sprintf(buf, ANNIVERSARY_SETTING, event_name0, target_date0, event_name1, target_date1);
+    app_controller->send_to(SERVER_APP_NAME, "Anniversary", APP_MESSAGE_GET_PARAM,
+                            (void *)"event_name2", event_name2);
+    app_controller->send_to(SERVER_APP_NAME, "Anniversary", APP_MESSAGE_GET_PARAM,
+                            (void *)"target_date2", target_date2);
+    sprintf(buf, ANNIVERSARY_SETTING, event_name0, target_date0, event_name1, target_date1, event_name2, target_date2);
     webpage = buf;
     Send_HTML(webpage);
 }
@@ -639,6 +647,14 @@ void saveAnniversaryConf(void)
                             APP_MESSAGE_SET_PARAM,
                             (void *)"target_date1",
                             (void *)server.arg("target_date1").c_str());
+    app_controller->send_to(SERVER_APP_NAME, "Anniversary",
+                            APP_MESSAGE_SET_PARAM,
+                            (void *)"event_name2",
+                            (void *)server.arg("event_name2").c_str());
+    app_controller->send_to(SERVER_APP_NAME, "Anniversary",
+                            APP_MESSAGE_SET_PARAM,
+                            (void *)"target_date2",
+                            (void *)server.arg("target_date2").c_str());
     // 持久化数据
     app_controller->send_to(SERVER_APP_NAME, "Anniversary", APP_MESSAGE_WRITE_CFG,
                             NULL, NULL);

@@ -7,15 +7,20 @@
 LV_FONT_DECLARE(lv_font_ibmplex_115);
 LV_FONT_DECLARE(lv_font_ibmplex_64);
 LV_FONT_DECLARE(ch_font20);
+LV_FONT_DECLARE(msyhbd_24);
 static lv_style_t default_style;
 static lv_style_t chFont_style;
 static lv_style_t numberSmall_style;
 static lv_style_t numberBig_style;
 static lv_style_t btn_style;
 static lv_style_t bar_style;
+static lv_style_t panel_style;
+static lv_style_t dateBtn_style;
+static lv_style_t msyhbdFont_style;
 
 static lv_obj_t *scr_1 = NULL;
 static lv_obj_t *scr_2 = NULL;
+static lv_obj_t *scr_3 = NULL;
 static lv_obj_t *chart, *titleLabel;
 
 static lv_obj_t *weatherImg = NULL;
@@ -27,6 +32,9 @@ static lv_obj_t *dateLabel = NULL;
 static lv_obj_t *tempImg = NULL, *tempBar = NULL, *tempLabel = NULL;
 static lv_obj_t *humiImg = NULL, *humiBar = NULL, *humiLabel = NULL;
 static lv_obj_t *spaceImg = NULL;
+static lv_obj_t *panel0 = NULL, *dateBtn0 = NULL, *eventLabel0 = NULL, *dateLabel0 = NULL;
+static lv_obj_t *panel1 = NULL, *dateBtn1 = NULL, *eventLabel1 = NULL, *dateLabel1 = NULL;
+static lv_obj_t *panel2 = NULL, *dateBtn2 = NULL, *eventLabel2 = NULL, *dateLabel2 = NULL;
 
 static lv_chart_series_t *ser1, *ser2;
 
@@ -68,6 +76,19 @@ void weather_gui_init(void)
     lv_style_set_pad_bottom(&bar_style, LV_STATE_DEFAULT, 1);
     lv_style_set_pad_left(&bar_style, LV_STATE_DEFAULT, 1);
     lv_style_set_pad_right(&bar_style, LV_STATE_DEFAULT, 1);
+
+    lv_style_init(&panel_style);
+    lv_style_set_radius(&panel_style, LV_STATE_DEFAULT, 10);
+    lv_style_set_border_width(&panel_style,  LV_STATE_DEFAULT, 0);
+    lv_style_set_bg_color(&panel_style, LV_STATE_DEFAULT, lv_color_make(82, 80, 81));
+    lv_style_init(&dateBtn_style);
+    lv_style_set_radius(&dateBtn_style, LV_STATE_DEFAULT, 10);
+    lv_style_set_border_width(&dateBtn_style,  LV_STATE_DEFAULT, 0);
+    lv_style_init(&msyhbdFont_style);
+    lv_style_set_text_opa(&msyhbdFont_style, LV_STATE_DEFAULT, LV_OPA_COVER);
+    lv_style_set_text_color(&msyhbdFont_style, LV_STATE_DEFAULT, LV_COLOR_WHITE);
+    lv_style_set_text_font(&msyhbdFont_style, LV_STATE_DEFAULT, &msyhbd_24);
+
 }
 
 void display_curve_init(lv_scr_load_anim_t anim_type)
@@ -274,6 +295,105 @@ void display_weather(struct Weather weaInfo, lv_scr_load_anim_t anim_type)
     }
 }
 
+void display_anni_init(lv_scr_load_anim_t anim_type)
+{
+    lv_obj_t *act_obj = lv_scr_act(); // 获取当前活动页
+    if (act_obj == scr_3)
+        return;
+    weather_gui_release();
+    lv_obj_clean(act_obj); // 清空此前页面
+
+    scr_3 = lv_obj_create(NULL, NULL);
+    lv_obj_add_style(scr_3, LV_BTN_PART_MAIN, &default_style);
+
+    
+    panel0 = lv_btn_create(scr_3, NULL);
+    lv_obj_add_style(panel0, LV_BTN_PART_MAIN, &panel_style);
+    lv_obj_set_size(panel0, 200, 50);
+    lv_obj_set_style_local_bg_color(panel0, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, lv_color_make(81, 81, 81));
+    panel1 = lv_btn_create(scr_3, NULL);
+    lv_obj_add_style(panel1, LV_BTN_PART_MAIN, &panel_style);
+    lv_obj_set_size(panel1, 200, 50);
+    lv_obj_set_style_local_bg_color(panel1, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, lv_color_make(81, 81, 81));
+    panel2 = lv_btn_create(scr_3, NULL);
+    lv_obj_add_style(panel2, LV_BTN_PART_MAIN, &panel_style);
+    lv_obj_set_size(panel2, 200, 50);
+    lv_obj_set_style_local_bg_color(panel2, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, lv_color_make(81, 81, 81));
+
+    dateBtn0 = lv_btn_create(scr_3, NULL);
+    lv_obj_add_style(dateBtn0, LV_BTN_PART_MAIN, &dateBtn_style);
+    lv_obj_set_size(dateBtn0, 70, 50);
+    dateBtn1 = lv_btn_create(scr_3, NULL);
+    lv_obj_add_style(dateBtn1, LV_BTN_PART_MAIN, &dateBtn_style);
+    lv_obj_set_size(dateBtn1, 70, 50);
+    dateBtn2 = lv_btn_create(scr_3, NULL);
+    lv_obj_add_style(dateBtn2, LV_BTN_PART_MAIN, &dateBtn_style);
+    lv_obj_set_size(dateBtn2, 70, 50);
+
+    dateLabel0 = lv_label_create(scr_3, NULL);
+    lv_label_set_recolor(dateLabel0, true);
+    lv_obj_add_style(dateLabel0, LV_LABEL_PART_MAIN, &msyhbdFont_style);
+    dateLabel1 = lv_label_create(scr_3, NULL);
+    lv_label_set_recolor(dateLabel1, true);
+    lv_obj_add_style(dateLabel1, LV_LABEL_PART_MAIN, &msyhbdFont_style);
+    dateLabel2 = lv_label_create(scr_3, NULL);
+    lv_label_set_recolor(dateLabel2, true);
+    lv_obj_add_style(dateLabel2, LV_LABEL_PART_MAIN, &msyhbdFont_style);
+
+    eventLabel0 = lv_label_create(scr_3, NULL);
+    lv_label_set_recolor(eventLabel0, true);
+    lv_obj_add_style(eventLabel0, LV_LABEL_PART_MAIN, &msyhbdFont_style);
+    eventLabel1 = lv_label_create(scr_3, NULL);
+    lv_label_set_recolor(eventLabel1, true);
+    lv_obj_add_style(eventLabel1, LV_LABEL_PART_MAIN, &msyhbdFont_style);
+    eventLabel2 = lv_label_create(scr_3, NULL);
+    lv_label_set_recolor(eventLabel2, true);
+    lv_obj_add_style(eventLabel2, LV_LABEL_PART_MAIN, &msyhbdFont_style);
+
+    // 绘制图形
+    lv_obj_align(panel0, NULL, LV_ALIGN_IN_TOP_MID, 0, 25);
+    lv_obj_align(panel1, NULL, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_align(panel2, NULL, LV_ALIGN_IN_BOTTOM_MID, 0, -25);
+
+    lv_obj_align(eventLabel0, panel0, LV_ALIGN_IN_LEFT_MID, 15, 0);
+    lv_obj_align(dateBtn0, panel0, LV_ALIGN_IN_RIGHT_MID, 0, 0);
+
+    lv_obj_align(eventLabel1, panel1, LV_ALIGN_IN_LEFT_MID, 15, 0);
+    lv_obj_align(dateBtn1, panel1, LV_ALIGN_IN_RIGHT_MID, 0, 0);
+
+    lv_obj_align(eventLabel2, panel2, LV_ALIGN_IN_LEFT_MID, 15, 0);
+    lv_obj_align(dateBtn2, panel2, LV_ALIGN_IN_RIGHT_MID, 0, 0);
+}
+
+void display_anni(struct AN_INFO *anniInfo, lv_scr_load_anim_t anim_type)
+{
+    display_anni_init(anim_type);
+    lv_label_set_text_fmt(dateLabel0, "%02d", (anniInfo->date_diff[0]<0)?(-anniInfo->date_diff[0] + 1):anniInfo->date_diff[0]);
+    lv_obj_align(dateLabel0, dateBtn0, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_style_local_bg_color(dateBtn0, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, (anniInfo->date_diff[0]>=0)?(lv_color_make(77, 148, 228)):(lv_color_make(246, 150, 47)));
+
+    lv_label_set_text_fmt(dateLabel1, "%02d", (anniInfo->date_diff[1]<0)?(-anniInfo->date_diff[1] + 1):anniInfo->date_diff[1]);
+    lv_obj_align(dateLabel1, dateBtn1, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_style_local_bg_color(dateBtn1, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, (anniInfo->date_diff[1]>=0)?(lv_color_make(77, 148, 228)):(lv_color_make(246, 150, 47)));
+
+    lv_label_set_text_fmt(dateLabel2, "%02d", (anniInfo->date_diff[2]<0)?(-anniInfo->date_diff[2] + 1):anniInfo->date_diff[2]);
+    lv_obj_align(dateLabel2, dateBtn2, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_style_local_bg_color(dateBtn2, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, (anniInfo->date_diff[2]>=0)?(lv_color_make(77, 148, 228)):(lv_color_make(246, 150, 47)));
+
+    lv_label_set_text(eventLabel0, anniInfo->event_name0);
+    lv_label_set_text(eventLabel1, anniInfo->event_name1);
+    lv_label_set_text(eventLabel2, anniInfo->event_name2);
+
+    if (LV_SCR_LOAD_ANIM_NONE != anim_type)
+    {
+        lv_scr_load_anim(scr_3, anim_type, 300, 300, false);
+    }
+    else
+    {
+        lv_scr_load(scr_3);
+    }
+}
+
 void display_time(struct TimeStr timeInfo, lv_scr_load_anim_t anim_type)
 {
     display_weather_init(anim_type);
@@ -340,6 +460,33 @@ void weather_obj_del(void)
         ser1 = NULL;
         ser2 = NULL;
     }
+    if (panel0 != NULL)
+    {
+        lv_obj_clean(panel0);
+        lv_obj_clean(panel1);
+        lv_obj_clean(panel2);
+        lv_obj_clean(eventLabel0);
+        lv_obj_clean(eventLabel1);
+        lv_obj_clean(eventLabel2);
+        lv_obj_clean(dateBtn0);
+        lv_obj_clean(dateBtn1);
+        lv_obj_clean(dateBtn2);
+        lv_obj_clean(dateLabel0);
+        lv_obj_clean(dateLabel1);
+        lv_obj_clean(dateLabel2);
+        panel0 = NULL;
+        panel1 = NULL;
+        panel2 = NULL;
+        eventLabel0 = NULL;
+        eventLabel1 = NULL;
+        eventLabel2 = NULL;
+        dateBtn0 = NULL;
+        dateBtn1 = NULL;
+        dateBtn2 = NULL;
+        dateLabel0 = NULL;
+        dateLabel1 = NULL;
+        dateLabel2 = NULL;
+    }
 }
 
 void weather_gui_release(void)
@@ -356,6 +503,12 @@ void weather_gui_release(void)
         lv_obj_clean(scr_2);
         scr_2 = NULL;
     }
+
+    if (scr_3 != NULL)
+    {
+        lv_obj_clean(scr_3);
+        scr_3 = NULL;
+    }
 }
 
 void weather_gui_del(void)
@@ -371,6 +524,18 @@ void weather_gui_del(void)
     {
         lv_obj_clean(scr_2);
         scr_2 = NULL;
+    }
+
+    if (scr_2 != NULL)
+    {
+        lv_obj_clean(scr_2);
+        scr_2 = NULL;
+    }
+
+    if (scr_3 != NULL)
+    {
+        lv_obj_clean(scr_3);
+        scr_3 = NULL;
     }
 
     // 手动清除样式，防止内存泄漏

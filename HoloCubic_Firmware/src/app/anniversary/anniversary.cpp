@@ -5,7 +5,7 @@
 #include "sys/time.h"
 
 #define ANNIVERSARY_APP_NAME "Anniversary"
-#define MAX_ANNIVERSARY_CNT 2
+#define MAX_ANNIVERSARY_CNT 3
 #define TIME_API "http://api.m.taobao.com/rest/api3.do?api=mtop.common.gettimestamp"
 
 bool tmfromString(const char *date_str, struct tm *date);
@@ -55,14 +55,18 @@ static void read_config(AN_Config *cfg)
     {
         // 默认值
         cfg->anniversary_cnt = 2;
-        cfg->event_name[0] = "生日还有"; 
-        cfg->target_date[0].tm_year = 0; // 设置为零则每年重复
-        cfg->target_date[0].tm_mon = 1; 
-        cfg->target_date[0].tm_mday = 1; 
+        cfg->event_name[0] = "养小恐龙"; 
+        cfg->target_date[0].tm_year = 2021; // 设置为零则每年重复
+        cfg->target_date[0].tm_mon = 10; 
+        cfg->target_date[0].tm_mday = 17; 
         cfg->event_name[1] = "毕业还有"; 
         cfg->target_date[1].tm_year = 2025; 
         cfg->target_date[1].tm_mon = 7; 
         cfg->target_date[1].tm_mday = 4; 
+        cfg->event_name[2] = "生日还有"; 
+        cfg->target_date[2].tm_year = 0; // 设置为零则每年重复
+        cfg->target_date[2].tm_mon = 1; 
+        cfg->target_date[2].tm_mday = 1; 
         cfg->current_date.tm_year = 2022; 
         cfg->current_date.tm_mon = 1; 
         cfg->current_date.tm_mday = 1; 
@@ -100,74 +104,6 @@ struct AnniversaryAppRunData
 static AN_Config cfg_data;
 static AnniversaryAppRunData *run_data = NULL;
 
-bool tmfromString(const char *date_str, struct tm *date)
-{
-    // TODO: add support for "a", "a.b", "a.b.c" formats
-
-    uint16_t acc = 0; // Accumulator
-    uint8_t dots = 0;
-
-    while (*date_str)
-    {
-        char c = *date_str++;
-        if (c >= '0' && c <= '9')
-        {
-            acc = acc * 10 + (c - '0');
-        }
-        else if (c == '.')
-        {
-            if (dots == 0) {
-                date->tm_year = acc;
-            }
-            else if (dots == 1) {
-                date->tm_mon = acc;
-            }
-            if (dots == 2) {
-                // Too much dots (there must be 3 dots)
-                return false;
-            }
-            acc = 0;
-            ++dots;
-        }
-        else
-        {
-            // Invalid char
-            return false;
-        }
-    }
-
-    if (dots != 2) {
-        // Too few dots (there must be 3 dots)
-        return false;
-    }
-    date->tm_mday = acc;
-    return true;
-}
-
-
-static int dateDiff(struct tm* date1, struct tm* date2)
-{
-    int y1, m1, d1;
-    int y2, m2, d2;
-    m1 = (date1->tm_mon + 9) % 12;
-    y1 = (date1->tm_year - m1/10);
-    d1 = 365 * y1 + y1/4 -y1/100 + y1/400 + (m1*306+5)/10 + (date1->tm_mday - 1);
-
-    m2 = (date2->tm_mon +9) % 12;
-    if (date2->tm_year == 0) {
-        if (date2->tm_mon < date1->tm_mon || (date2->tm_mon == date1->tm_mon && date2->tm_mon < date1->tm_mon)) {
-            y2 = date1->tm_year + 1 - m2/10;
-        }
-        else {
-            y2 = date1->tm_year - m2/10;
-        }
-    }
-    else {
-        y2 = date2->tm_year - m2/10;
-    }
-    d2 = 365*y2 +y2/4 -y2/100 + y2/400 +(m2*306+5)/10 + (date2->tm_mday - 1);
-    return (d2 -d1);
-}
 
 static void get_date_diff()
 {
@@ -285,7 +221,7 @@ static void anniversary_process(AppController *sys,
     // Serial.println(F(""));
     // Serial.println(F(cfg_data.event_name[run_data->cur_anniversary].c_str()));
     display_anniversary("anniversary", anim_type, &(cfg_data.target_date[run_data->cur_anniversary]), run_data->anniversary_day_count, cfg_data.event_name[run_data->cur_anniversary].c_str());
-    anniversary_gui_display_date(&(cfg_data.target_date[run_data->cur_anniversary]), run_data->anniversary_day_count, cfg_data.event_name[run_data->cur_anniversary].c_str());
+    // anniversary_gui_display_date(&(cfg_data.target_date[run_data->cur_anniversary]), run_data->anniversary_day_count, cfg_data.event_name[run_data->cur_anniversary].c_str());
     // 发送请求。如果是wifi相关的消息，当请求完成后自动会调用 anniversary_message_handle 函数
     // sys->send_to(ANNIVERSARY_APP_NAME, CTRL_NAME,
     //              APP_MESSAGE_WIFI_CONN, (void *)run_data->val1, NULL);
@@ -358,6 +294,15 @@ static void anniversary_message_handle(const char *from, const char *to,
             struct tm* tmp_tm = &(cfg_data.target_date[1]);
             snprintf((char *)ext_info, 32, "%d.%d.%d", tmp_tm->tm_year, tmp_tm->tm_mon, tmp_tm->tm_mday);
         }
+        else if (!strcmp(param_key, "event_name2"))
+        {
+            snprintf((char *)ext_info, 32, "%s", cfg_data.event_name[2].c_str());
+        }
+        else if (!strcmp(param_key, "target_date2"))
+        {
+            struct tm* tmp_tm = &(cfg_data.target_date[2]);
+            snprintf((char *)ext_info, 32, "%d.%d.%d", tmp_tm->tm_year, tmp_tm->tm_mon, tmp_tm->tm_mday);
+        }
     }
     break;
     case APP_MESSAGE_SET_PARAM:
@@ -379,6 +324,14 @@ static void anniversary_message_handle(const char *from, const char *to,
         else if (!strcmp(param_key, "target_date1"))
         {
             tmfromString(param_val, &(cfg_data.target_date[1]));
+        }
+        else if (!strcmp(param_key, "event_name2"))
+        {
+            cfg_data.event_name[2] = param_val;
+        }
+        else if (!strcmp(param_key, "target_date2"))
+        {
+            tmfromString(param_val, &(cfg_data.target_date[2]));
         }
     }
     break;

@@ -29,6 +29,10 @@ boolean doDelayMillisTime(unsigned long interval,
                           unsigned long *previousMillis,
                           boolean state);
 
+int dateDiff(struct tm* date1, struct tm* date2);
+
+bool tmfromString(const char *date_str, struct tm *date);
+
 // 光感 (与MPU6050一致)
 #define AMB_I2C_SDA 32
 #define AMB_I2C_SCL 33

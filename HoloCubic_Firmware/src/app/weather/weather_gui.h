@@ -17,6 +17,14 @@ struct Weather
     short daily_min[7];
 };
 
+struct AN_INFO
+{  
+    const char *event_name0; // 事件名称
+    const char *event_name1; // 事件名称
+    const char *event_name2; // 事件名称
+    int date_diff[3]; // 还有多少天  
+};
+
 struct TimeStr
 {
     int month;
@@ -43,6 +51,8 @@ extern "C"
     void display_curve(short maxT[], short minT[], lv_scr_load_anim_t anim_type);
     void display_weather_init(lv_scr_load_anim_t anim_type);
     void display_weather(struct Weather weaInfo, lv_scr_load_anim_t anim_type);
+    void display_anni_init(lv_scr_load_anim_t anim_type);
+    void display_anni(struct AN_INFO *anniInfo, lv_scr_load_anim_t anim_type);
     void display_time(struct TimeStr timeInfo, lv_scr_load_anim_t anim_type);
     void weather_gui_release(void);
     void weather_gui_del(void);
