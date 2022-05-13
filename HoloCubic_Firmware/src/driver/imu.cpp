@@ -91,20 +91,22 @@ ImuAction *IMU::update(int interval)
                 encoder_diff--;
                 action_info.isValid = 1;
                 action_info.active = TURN_LEFT;
+                return_flag = 0;
             }
             else if (action_info.v_ay < -4000)
             {
                 encoder_diff++;
                 action_info.isValid = 1;
                 action_info.active = TURN_RIGHT;
+                return_flag = 0;
             }
-            else if (action_info.v_ay > 1000 || action_info.v_ay < -1000)
-            {
-                // 震动检测
-                encoder_diff--;
-                action_info.isValid = 1;
-                action_info.active = SHAKE;
-            }
+            // else if (action_info.v_ay > 1000 || action_info.v_ay < -1000)
+            // {
+            //     // 震动检测
+            //     encoder_diff--;
+            //     action_info.isValid = 1;
+            //     action_info.active = SHAKE;
+            // }
             else
             {
                 action_info.isValid = 0;
@@ -152,41 +154,56 @@ ImuAction *IMU::update(int interval)
 
         if (!action_info.isValid)
         {
-            if (action_info.v_ax > 5000)
+            if (action_info.v_ax > 4000)
             {
                 action_info.isValid = 1;
-                action_info.active = UP;
-                delay(500);
-                getVirtureMotion6(&action_info);
-                if (action_info.v_ax > 5000)
+                action_info.active = GO_FORWORD;
+                encoder_state = LV_INDEV_STATE_PR;
+                return_flag = 0;
+                // delay(500);
+                // getVirtureMotion6(&action_info);
+                // if (action_info.v_ax > 5000)
+                // {
+                //     action_info.isValid = 1;
+                //     action_info.active = UP;
+                // }
+            }
+            else if (action_info.v_ax < -4000)
+            {
+                if (return_flag == 1 && doDelayMillisTime(2000, &last_not_return_time, false)) 
                 {
                     action_info.isValid = 1;
-                    action_info.active = GO_FORWORD;
-                    encoder_state = LV_INDEV_STATE_PR;
+                    action_info.active = DOWN;
                 }
-            }
-            else if (action_info.v_ax < -5000)
-            {
-                action_info.isValid = 1;
-                action_info.active = DOWN;
-                delay(500);
-                getVirtureMotion6(&action_info);
-                if (action_info.v_ax < -5000)
+                else 
                 {
+                    if (return_flag == 0)
+                    {
+                        return_flag = 1;
+                        last_not_return_time = millis();
+                    }
                     action_info.isValid = 1;
                     action_info.active = RETURN;
                     encoder_state = LV_INDEV_STATE_REL;
                 }
+                // delay(500);
+                // getVirtureMotion6(&action_info);
+                // if (action_info.v_ax < -5000)
+                // {
+                //     action_info.isValid = 1;
+                //     action_info.active = DOWN;
+                // }
             }
-            else if (action_info.v_ax > 1000 || action_info.v_ax < -1000)
-            {
-                // 震动检测
-                action_info.isValid = 1;
-                action_info.active = SHAKE;
-            }
+            // else if (action_info.v_ax > 1000 || action_info.v_ax < -1000)
+            // {
+            //     // 震动检测
+            //     action_info.isValid = 1;
+            //     action_info.active = SHAKE;
+            // }
             else
             {
                 action_info.isValid = 0;
+                return_flag = 0;
             }
         }
 

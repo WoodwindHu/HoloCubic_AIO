@@ -88,7 +88,7 @@ static int game_2048_init(void)
 static void game_2048_process(AppController *sys,
                        const ImuAction *act_info)
 {
-    if (RETURN == act_info->active)
+    if (DOWN == act_info->active)
     {
         sys->app_exit(); // 退出APP
         return;
@@ -113,7 +113,8 @@ static void game_2048_process(AppController *sys,
                      run_data->pBoard);
         }
     }
-    else if (UP == act_info->active)
+    else if (GO_FORWORD == act_info->active)
+    // else if (UP == act_info->active)
     {
         game.moveUp();
         if (game.comparePre() == 0)
@@ -122,7 +123,8 @@ static void game_2048_process(AppController *sys,
                      run_data->pBoard);
         }
     }
-    else if (DOWN == act_info->active)
+    else if (RETURN == act_info->active)
+    // else if (DOWN == act_info->active)
     {
         game.moveDown();
         if (game.comparePre() == 0)

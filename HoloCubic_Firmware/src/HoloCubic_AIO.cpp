@@ -109,8 +109,8 @@ void setup()
     // 将APP"安装"到controller里
     app_controller->app_install(&weather_app);
     // app_controller->app_install(&weather_old_app);
-    // app_controller->app_install(&picture_app);
-    // app_controller->app_install(&media_app);
+    app_controller->app_install(&picture_app);
+    app_controller->app_install(&media_app);
     // app_controller->app_install(&screen_share_app);
     // app_controller->app_install(&file_manager_app);
     app_controller->app_install(&server_app);

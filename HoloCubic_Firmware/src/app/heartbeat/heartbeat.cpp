@@ -139,6 +139,9 @@ struct HeartbeatAppRunData
 {
     uint8_t send_cnt = 0;
     uint8_t recv_cnt = 0;
+    uint8_t rgb_flag = 0; 
+    unsigned long preTimestamp; 
+    RgbParam rgb_setting; // rgb参数
 };
 
 
@@ -157,11 +160,53 @@ static int heartbeat_init(void)
     run_data = (HeartbeatAppRunData *)calloc(1, sizeof(HeartbeatAppRunData));
     run_data->send_cnt = 0;
     run_data->recv_cnt = 0;
+    run_data->rgb_flag = 0;
+}
+
+void heartbeat_rgb()
+{
+    if (run_data->rgb_flag == 0) 
+    {
+        run_data->rgb_flag = 1;
+        // 初始化RGB灯 HSV色彩模式
+        run_data->rgb_setting = {LED_MODE_HSV,
+                                app_controller->rgb_cfg.min_value_0, app_controller->rgb_cfg.min_value_1, app_controller->rgb_cfg.min_value_2,
+                                app_controller->rgb_cfg.max_value_0, app_controller->rgb_cfg.max_value_1, app_controller->rgb_cfg.max_value_2,
+                                0,0,0,
+                                0.01, 0.95,
+                                0.05, 10};
+        set_rgb(&(run_data->rgb_setting));
+        run_data->preTimestamp = millis();
+    }
+    else 
+    {
+        run_data->preTimestamp = millis();
+    }
+}
+
+void heartbeat_rgb_reset()
+{
+    run_data->rgb_flag = 0;
+    RgbConfig *rgb_cfg = &app_controller->rgb_cfg;
+    // 初始化RGB灯 HSV色彩模式
+    Serial.printf("rgb_cfg time %d", app_controller->rgb_cfg.time);
+    Serial.println();
+    RgbParam rgb_setting = {LED_MODE_HSV,
+                            app_controller->rgb_cfg.min_value_0, app_controller->rgb_cfg.min_value_1, app_controller->rgb_cfg.min_value_2,
+                            app_controller->rgb_cfg.max_value_0, app_controller->rgb_cfg.max_value_1, app_controller->rgb_cfg.max_value_2,
+                            app_controller->rgb_cfg.step_0, app_controller->rgb_cfg.step_1, app_controller->rgb_cfg.step_2,
+                            app_controller->rgb_cfg.min_brightness, app_controller->rgb_cfg.max_brightness,
+                            app_controller->rgb_cfg.brightness_step, app_controller->rgb_cfg.time};
+    set_rgb(&rgb_setting);
 }
 
 static void heartbeat_process(AppController *sys,
                             const ImuAction *act_info)
 {
+    if (run_data->rgb_flag == 1 && doDelayMillisTime(3000, &(run_data->preTimestamp), false))
+    {
+        heartbeat_rgb_reset();
+    }
     lv_scr_load_anim_t anim_type = LV_SCR_LOAD_ANIM_NONE;
     if (RETURN == act_info->active)
     {
@@ -172,17 +217,11 @@ static void heartbeat_process(AppController *sys,
     {
         anim_type = LV_SCR_LOAD_ANIM_MOVE_TOP;
         run_data->send_cnt += 1;
-        hb_cfg.mqtt_client->publish(hb_cfg.liz_mqtt_pubtopic, "hello!");
+        hb_cfg.mqtt_client->publish(hb_cfg.liz_mqtt_pubtopic, MQTT_SEND_MSG);
         Serial.printf("sent publish %s successful", hb_cfg.liz_mqtt_pubtopic); 
         Serial.println();
         // 发送指示灯
-        // RgbParam rgb_setting = {LED_MODE_RGB,
-        //                     0, 0, 0, 
-        //                     240,240,240,
-        //                     60, 60, 60,
-        //                     0.15, 0.25,
-        //                     0.001, 4};
-        // set_rgb(&rgb_setting);
+        heartbeat_rgb();
     }
     if (run_data->recv_cnt > 0 && run_data->send_cnt > 0) 
     {
@@ -198,6 +237,7 @@ static void heartbeat_process(AppController *sys,
         run_data->send_cnt += 1;
         hb_cfg.mqtt_client->publish(hb_cfg.liz_mqtt_pubtopic, MQTT_SEND_MSG);
         Serial.printf("sent publish %s successful", hb_cfg.liz_mqtt_pubtopic); 
+        heartbeat_rgb();
     }
     // 发送请求。如果是wifi相关的消息，当请求完成后自动会调用 heartbeat_message_handle 函数
     // sys->send_to(HEARTBEAT_APP_NAME, CTRL_NAME,
@@ -212,6 +252,10 @@ static void heartbeat_process(AppController *sys,
 
 static int heartbeat_exit_callback(void *param)
 {
+    if (run_data->rgb_flag == 1) 
+    {
+        heartbeat_rgb_reset();
+    }
     // 释放资源
     heartbeat_gui_del();
     free(run_data);
@@ -227,7 +271,7 @@ static void heartbeat_message_handle(const char *from, const char *to,
     {
     case APP_MESSAGE_WIFI_CONN:
     {
-        Serial.println(F("MQTT keep alive"));
+        // Serial.println(F("MQTT keep alive"));
         if (!hb_cfg.mqtt_client->connected()) {
             hb_cfg.mqtt_reconnect();
         }
@@ -241,7 +285,7 @@ static void heartbeat_message_handle(const char *from, const char *to,
     break;
     case APP_MESSAGE_WIFI_ALIVE:
     {
-        Serial.println(F("MQTT keep alive(APP_MESSAGE_WIFI_ALIVE)"));
+        // Serial.println(F("MQTT keep alive(APP_MESSAGE_WIFI_ALIVE)"));
         if (!hb_cfg.mqtt_client->connected()) {
             hb_cfg.mqtt_reconnect();
         }
@@ -300,13 +344,7 @@ static void heartbeat_message_handle(const char *from, const char *to,
             heartbeat_set_sr_type(RECV);
         }
         /* 亮一下 */
-        // RgbParam rgb_setting = {LED_MODE_RGB,
-        //                     0, 0, 0, 
-        //                     3,36,86,
-        //                     1, 1, 1,
-        //                     0.15, 0.25,
-        //                     0.001, 8};
-        // set_rgb(&rgb_setting);
+        heartbeat_rgb();
         run_data->recv_cnt++;
         Serial.println("received heartbeat");
     }
