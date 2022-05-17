@@ -57,6 +57,10 @@ static void write_config(HeartbeatAppForeverData *cfg)
     memset(tmp, 0, 16);
     snprintf(tmp, 16, "%s\n", cfg->client_id);
     w_data += tmp;
+    snprintf(tmp, 16, "%s\n", cfg->username);
+    w_data += tmp;
+    snprintf(tmp, 16, "%s\n", cfg->passwd);
+    w_data += tmp;
     g_flashCfg.writeFile(HEARTBEAT_CONFIG_PATH, w_data.c_str());
 }
 
@@ -206,12 +210,15 @@ static void heartbeat_process(AppController *sys,
     else if (GO_FORWORD == act_info->active) // 向前按发送一条消息
     {
         anim_type = LV_SCR_LOAD_ANIM_MOVE_TOP;
-        run_data->send_cnt += 1;
-        hb_cfg.mqtt_client->publish(hb_cfg.pubtopic, MQTT_SEND_MSG);
-        Serial.printf("sent publish %s successful", hb_cfg.pubtopic); 
-        Serial.println();
-        // 发送指示灯
-        heartbeat_rgb();
+        if (hb_cfg.mqtt_client->connected()) 
+        {
+            run_data->send_cnt += 1;
+            hb_cfg.mqtt_client->publish(hb_cfg.pubtopic, MQTT_SEND_MSG);
+            Serial.printf("sent publish %s successful", hb_cfg.pubtopic); 
+            Serial.println();
+            // 发送指示灯
+            heartbeat_rgb();
+        }
     }
     if (run_data->recv_cnt > 0 && run_data->send_cnt > 0) 
     {
@@ -223,11 +230,15 @@ static void heartbeat_process(AppController *sys,
     }
     else if (run_data->send_cnt == 0) // 进入app时自动发送mqtt消息
     {
+        sys->send_to("Heartbeat", CTRL_NAME, APP_MESSAGE_WIFI_CONN, NULL, NULL);
         heartbeat_set_sr_type(SEND);
-        run_data->send_cnt += 1;
-        hb_cfg.mqtt_client->publish(hb_cfg.pubtopic, MQTT_SEND_MSG);
-        Serial.printf("sent publish %s successful", hb_cfg.pubtopic); 
-        heartbeat_rgb();
+        if (hb_cfg.mqtt_client->connected()) 
+        {
+            run_data->send_cnt += 1;
+            hb_cfg.mqtt_client->publish(hb_cfg.pubtopic, MQTT_SEND_MSG);
+            Serial.printf("sent publish %s successful", hb_cfg.pubtopic); 
+            heartbeat_rgb();
+        }
     }
     // 发送请求。如果是wifi相关的消息，当请求完成后自动会调用 heartbeat_message_handle 函数
     // sys->send_to(HEARTBEAT_APP_NAME, CTRL_NAME,
