@@ -103,8 +103,12 @@ String file_size(int bytes)
                       "</label><input class=\"btn\" type=\"submit\" name=\"submit\" value=\"保存\"></form>"
 
 #define HEARTBEAT_SETTING "<form method=\"GET\" action=\"saveHeartbeatConf\">"                                                                                          \
-                        "<label class=\"input\"><span>Role(0:heart,1:beat)</span><input type=\"text\"name=\"role\"value=\"%s\"></label>"                            \
                         "<label class=\"input\"><span>MQTT Server</span><input type=\"text\"name=\"mqtt_server\"value=\"%s\"></label>"                    \
+                        "<label class=\"input\"><span>MQTT Pubish Topic</span><input type=\"text\"name=\"pubtopic\"value=\"%s\"></label>"                    \
+                        "<label class=\"input\"><span>MQTT Subscribe Topic</span><input type=\"text\"name=\"subtopic\"value=\"%s\"></label>"                    \
+                        "<label class=\"input\"><span>MQTT Client ID</span><input type=\"text\"name=\"client_id\"value=\"%s\"></label>"                    \
+                        "<label class=\"input\"><span>MQTT Username</span><input type=\"text\"name=\"username\"value=\"%s\"></label>"                    \
+                        "<label class=\"input\"><span>MQTT Password</span><input type=\"text\"name=\"passwd\"value=\"%s\"></label>"                    \
                         "</label><input class=\"btn\" type=\"submit\" name=\"submit\" value=\"保存\"></form>"
 
 #define ANNIVERSARY_SETTING "<form method=\"GET\" action=\"saveAnniversaryConf\">"                                                                                          \
@@ -393,16 +397,28 @@ void screen_setting()
 void heartbeat_setting()
 {
     char buf[2048];
-    char role[32];
-    char mqtt_server[32];
+    char mqtt_server[128];
+    char pubtopic[128];
+    char subtopic[128];
+    char client_id[128];
+    char username[128];
+    char passwd[128];
     // 读取数据
     app_controller->send_to(SERVER_APP_NAME, "Heartbeat", APP_MESSAGE_READ_CFG,
                             NULL, NULL);
     app_controller->send_to(SERVER_APP_NAME, "Heartbeat", APP_MESSAGE_GET_PARAM,
-                            (void *)"role", role);
-    app_controller->send_to(SERVER_APP_NAME, "Heartbeat", APP_MESSAGE_GET_PARAM,
                             (void *)"mqtt_server", mqtt_server);
-    sprintf(buf, HEARTBEAT_SETTING, role, mqtt_server);
+    app_controller->send_to(SERVER_APP_NAME, "Heartbeat", APP_MESSAGE_GET_PARAM,
+                            (void *)"pubtopic", pubtopic);
+    app_controller->send_to(SERVER_APP_NAME, "Heartbeat", APP_MESSAGE_GET_PARAM,
+                            (void *)"subtopic", subtopic);
+    app_controller->send_to(SERVER_APP_NAME, "Heartbeat", APP_MESSAGE_GET_PARAM,
+                            (void *)"client_id", client_id);
+    app_controller->send_to(SERVER_APP_NAME, "Heartbeat", APP_MESSAGE_GET_PARAM,
+                            (void *)"username", username);
+    app_controller->send_to(SERVER_APP_NAME, "Heartbeat", APP_MESSAGE_GET_PARAM,
+                            (void *)"passwd", passwd);
+    sprintf(buf, HEARTBEAT_SETTING, mqtt_server, pubtopic, subtopic, client_id, username, passwd);
     webpage = buf;
     Send_HTML(webpage);
 }
@@ -617,12 +633,28 @@ void saveHeartbeatConf(void)
     Send_HTML(F("<h1>设置成功! 退出APP或者继续其他设置.</h1>"));
     app_controller->send_to(SERVER_APP_NAME, "Heartbeat",
                             APP_MESSAGE_SET_PARAM,
-                            (void *)"role",
-                            (void *)server.arg("role").c_str());
-    app_controller->send_to(SERVER_APP_NAME, "Heartbeat",
-                            APP_MESSAGE_SET_PARAM,
                             (void *)"mqtt_server",
                             (void *)server.arg("mqtt_server").c_str());
+    app_controller->send_to(SERVER_APP_NAME, "Heartbeat",
+                            APP_MESSAGE_SET_PARAM,
+                            (void *)"pubtopic",
+                            (void *)server.arg("pubtopic").c_str());
+    app_controller->send_to(SERVER_APP_NAME, "Heartbeat",
+                            APP_MESSAGE_SET_PARAM,
+                            (void *)"subtopic",
+                            (void *)server.arg("subtopic").c_str());
+    app_controller->send_to(SERVER_APP_NAME, "Heartbeat",
+                            APP_MESSAGE_SET_PARAM,
+                            (void *)"client_id",
+                            (void *)server.arg("client_id").c_str());
+    app_controller->send_to(SERVER_APP_NAME, "Heartbeat",
+                            APP_MESSAGE_SET_PARAM,
+                            (void *)"username",
+                            (void *)server.arg("username").c_str());
+    app_controller->send_to(SERVER_APP_NAME, "Heartbeat",
+                            APP_MESSAGE_SET_PARAM,
+                            (void *)"passwd",
+                            (void *)server.arg("passwd").c_str());
     // 持久化数据
     app_controller->send_to(SERVER_APP_NAME, "Heartbeat", APP_MESSAGE_WRITE_CFG,
                             NULL, NULL);

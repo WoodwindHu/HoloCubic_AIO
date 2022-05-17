@@ -15,10 +15,11 @@ extern AppController *app_controller; // APP控制器
 // 常驻数据，可以不随APP的生命周期而释放或删除
 struct HeartbeatAppForeverData
 {
-    long role; // 0: heart, 1: beat
-    char liz_mqtt_subtopic[10]; // "/beat"
-    char liz_mqtt_pubtopic[10]; // "/heart"
-    char client_id[10];  // "hc_heart"
+    char subtopic[128]; // "/beat"
+    char pubtopic[128]; // "/heart"
+    char client_id[128];  // "hc_heart"
+    char username[128];
+    char passwd[128];
     IPAddress mqtt_server; 
     WiFiClient espClient; // 定义wifiClient实例
     PubSubClient *mqtt_client; //(mqtt_server, 1883, callback, espClient);
@@ -46,27 +47,12 @@ static void write_config(HeartbeatAppForeverData *cfg)
 {
     char tmp[16];
     String w_data;
-    memset(tmp, 0, 16);
-    snprintf(tmp, 16, "%ld\n", cfg->role);
-    w_data += tmp;
     w_data = w_data + cfg->mqtt_server.toString() + "\n";
-    if (cfg->role == 0) 
-    {
-        strcpy(cfg->liz_mqtt_subtopic,"/beat");
-        strcpy(cfg->liz_mqtt_pubtopic,"/heart");
-        strcpy(cfg->client_id,"hc_heart");
-    }
-    else 
-    {
-        strcpy(cfg->liz_mqtt_subtopic,"/heart");
-        strcpy(cfg->liz_mqtt_pubtopic,"/beat");
-        strcpy(cfg->client_id,"hc_beat");
-    }
     memset(tmp, 0, 16);
-    snprintf(tmp, 16, "%s\n", cfg->liz_mqtt_subtopic);
+    snprintf(tmp, 16, "%s\n", cfg->subtopic);
     w_data += tmp;
     memset(tmp, 0, 16);
-    snprintf(tmp, 16, "%s\n", cfg->liz_mqtt_pubtopic);
+    snprintf(tmp, 16, "%s\n", cfg->pubtopic);
     w_data += tmp;
     memset(tmp, 0, 16);
     snprintf(tmp, 16, "%s\n", cfg->client_id);
@@ -95,20 +81,23 @@ static void read_config(HeartbeatAppForeverData *cfg)
         // 解析数据
         char *param[5] = {0};
         analyseParam(info, 5, param);
-        cfg->role = atol(param[0]);
-        Serial.printf("hb_role %ld", cfg->role);
-        Serial.println();
-        cfg->mqtt_server.fromString(param[1]);
+        cfg->mqtt_server.fromString(param[0]);
         Serial.printf("mqtt_server %s", cfg->mqtt_server.toString().c_str());
         Serial.println();
-        strcpy(cfg->liz_mqtt_subtopic,param[2]);
-        Serial.printf("liz_mqtt_subtopic %s", cfg->liz_mqtt_subtopic);
+        strcpy(cfg->subtopic,param[1]);
+        Serial.printf("subtopic %s", cfg->subtopic);
         Serial.println();
-        strcpy(cfg->liz_mqtt_pubtopic,param[3]);
-        Serial.printf("liz_mqtt_pubtopic %s", cfg->liz_mqtt_pubtopic);
+        strcpy(cfg->pubtopic,param[2]);
+        Serial.printf("pubtopic %s", cfg->pubtopic);
+        Serial.println();
+        strcpy(cfg->client_id, param[3]);
+        Serial.printf("client_id %s", cfg->client_id);
         Serial.println();
         strcpy(cfg->client_id, param[4]);
-        Serial.printf("client_id %s", cfg->client_id);
+        Serial.printf("username %s", cfg->username);
+        Serial.println();
+        strcpy(cfg->client_id, param[5]);
+        Serial.printf("password %s", cfg->passwd);
         Serial.println();
         cfg->mqtt_client = new PubSubClient(cfg->mqtt_server, 1883, cfg->callback, cfg->espClient);
     }
@@ -119,11 +108,11 @@ void HeartbeatAppForeverData::mqtt_reconnect()
 {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    if (mqtt_client->connect(client_id)) {
+    if ((strlen(username) > 0) ? mqtt_client->connect(client_id, username, passwd) : mqtt_client->connect(client_id)) {
         Serial.println("mqtt connected");
         // 连接成功时订阅主题
-        mqtt_client->subscribe(liz_mqtt_subtopic);
-        Serial.printf("%s subcribed", liz_mqtt_subtopic);
+        mqtt_client->subscribe(subtopic);
+        Serial.printf("%s subcribed", subtopic);
         Serial.println();
     } 
     else 
@@ -154,8 +143,9 @@ static HeartbeatAppRunData *run_data = NULL;
 static int heartbeat_init(void)
 {
     // 获取配置参数
-    // read_config(&hb_cfg); // already read;
+    read_config(&hb_cfg); 
     heartbeat_gui_init();
+    app_controller->connect_mqtt();
     // 初始化运行时参数
     run_data = (HeartbeatAppRunData *)calloc(1, sizeof(HeartbeatAppRunData));
     run_data->send_cnt = 0;
@@ -217,8 +207,8 @@ static void heartbeat_process(AppController *sys,
     {
         anim_type = LV_SCR_LOAD_ANIM_MOVE_TOP;
         run_data->send_cnt += 1;
-        hb_cfg.mqtt_client->publish(hb_cfg.liz_mqtt_pubtopic, MQTT_SEND_MSG);
-        Serial.printf("sent publish %s successful", hb_cfg.liz_mqtt_pubtopic); 
+        hb_cfg.mqtt_client->publish(hb_cfg.pubtopic, MQTT_SEND_MSG);
+        Serial.printf("sent publish %s successful", hb_cfg.pubtopic); 
         Serial.println();
         // 发送指示灯
         heartbeat_rgb();
@@ -235,8 +225,8 @@ static void heartbeat_process(AppController *sys,
     {
         heartbeat_set_sr_type(SEND);
         run_data->send_cnt += 1;
-        hb_cfg.mqtt_client->publish(hb_cfg.liz_mqtt_pubtopic, MQTT_SEND_MSG);
-        Serial.printf("sent publish %s successful", hb_cfg.liz_mqtt_pubtopic); 
+        hb_cfg.mqtt_client->publish(hb_cfg.pubtopic, MQTT_SEND_MSG);
+        Serial.printf("sent publish %s successful", hb_cfg.pubtopic); 
         heartbeat_rgb();
     }
     // 发送请求。如果是wifi相关的消息，当请求完成后自动会调用 heartbeat_message_handle 函数
@@ -295,13 +285,29 @@ static void heartbeat_message_handle(const char *from, const char *to,
     case APP_MESSAGE_GET_PARAM:
     {
         char *param_key = (char *)message;
-        if (!strcmp(param_key, "role"))
-        {
-            snprintf((char *)ext_info, 32, "%ld", hb_cfg.role);
-        }
-        else if (!strcmp(param_key, "mqtt_server"))
+        if (!strcmp(param_key, "mqtt_server"))
         {
             snprintf((char *)ext_info, 32, "%s", hb_cfg.mqtt_server.toString().c_str());
+        }
+        else if (!strcmp(param_key, "subtopic"))
+        {
+            snprintf((char *)ext_info, 32, "%s", hb_cfg.subtopic);
+        }
+        else if (!strcmp(param_key, "pubtopic"))
+        {
+            snprintf((char *)ext_info, 32, "%s", hb_cfg.pubtopic);
+        }
+        else if (!strcmp(param_key, "client_id"))
+        {
+            snprintf((char *)ext_info, 32, "%s", hb_cfg.client_id);
+        }
+        else if (!strcmp(param_key, "username"))
+        {
+            snprintf((char *)ext_info, 32, "%s", hb_cfg.username);
+        }
+        else if (!strcmp(param_key, "passwd"))
+        {
+            snprintf((char *)ext_info, 32, "%s", hb_cfg.passwd);
         }
     }
     break;
@@ -309,17 +315,31 @@ static void heartbeat_message_handle(const char *from, const char *to,
     {
         char *param_key = (char *)message;
         char *param_val = (char *)ext_info;
-        if (!strcmp(param_key, "role"))
-        {
-            hb_cfg.role = atol(param_val);
-            Serial.printf("hb role %ld", hb_cfg.role);
-            Serial.println();
-        }
-        else if (!strcmp(param_key, "mqtt_server"))
+        if (!strcmp(param_key, "mqtt_server"))
         {
             hb_cfg.mqtt_server.fromString(param_val);
             Serial.printf("mqtt_server %s", hb_cfg.mqtt_server.toString().c_str());
             Serial.println();
+        }
+        else if (!strcmp(param_key, "subtopic"))
+        {
+            strcpy(hb_cfg.subtopic, param_val);
+        }
+        else if (!strcmp(param_key, "pubtopic"))
+        {
+            strcpy(hb_cfg.pubtopic, param_val);
+        }
+        else if (!strcmp(param_key, "client_id"))
+        {
+            strcpy(hb_cfg.client_id, param_val);
+        }
+        else if (!strcmp(param_key, "username"))
+        {
+            strcpy(hb_cfg.username, param_val);
+        }
+        else if (!strcmp(param_key, "passwd"))
+        {
+            strcpy(hb_cfg.passwd, param_val);
         }
     }
     break;
