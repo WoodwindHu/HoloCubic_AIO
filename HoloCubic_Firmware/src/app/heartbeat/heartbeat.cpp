@@ -83,7 +83,7 @@ static void read_config(HeartbeatAppForeverData *cfg)
     else
     {
         // 解析数据
-        char *param[5] = {0};
+        char *param[6] = {0};
         analyseParam(info, 5, param);
         cfg->mqtt_server.fromString(param[0]);
         Serial.printf("mqtt_server %s", cfg->mqtt_server.toString().c_str());
