@@ -141,12 +141,12 @@ void setup()
     // 初始化RGB任务
     rgb_thread_init(&rgb_setting);
 
-    char info[128] = {0};
-    uint16_t size = g_flashCfg.readFile("/heartbeat.cfg", (uint8_t *)info);
-    if (size != 0) // 如果已经设置过heartbeat了，则开启mqtt客户端
-    {
-        app_controller->connect_mqtt();
-    }
+    // char info[128] = {0};
+    // uint16_t size = g_flashCfg.readFile("/heartbeat.cfg", (uint8_t *)info);
+    // if (size != 0) // 如果已经设置过heartbeat了，则开启mqtt客户端
+    // {
+    //     app_controller->connect_mqtt();
+    // }
 
     // Update display in parallel thread.
     // xTaskCreate(

@@ -94,9 +94,9 @@ void AppController::connect_mqtt()
 {
     m_mqtt_status=1;
     // init mqtt client
-    send_to("Heartbeat", "Heartbeat", APP_MESSAGE_READ_CFG, NULL, NULL);
+    // send_to("Heartbeat", "Heartbeat", APP_MESSAGE_READ_CFG, NULL, NULL);
     // 连接wifi，并开启mqtt客户端
-    send_to("Heartbeat", CTRL_NAME, APP_MESSAGE_WIFI_CONN, NULL, NULL);
+    // send_to("Heartbeat", CTRL_NAME, APP_MESSAGE_WIFI_CONN, NULL, NULL);
 }
 
 int AppController::main_process(ImuAction *act_info)

@@ -70,7 +70,7 @@ void anniversary_gui_init(void)
  * 其他函数请根据需要添加
  */
 
-void display_anniversary(const char *file_name, lv_scr_load_anim_t anim_type, struct tm *target_date, int anniversary_day_count, const char *event_name)
+void display_anniversary_init(lv_scr_load_anim_t anim_type)
 {
     lv_obj_t *act_obj = lv_scr_act(); // 获取当前活动页
     if (act_obj == anniversary_gui)
@@ -85,14 +85,11 @@ void display_anniversary(const char *file_name, lv_scr_load_anim_t anim_type, st
     /* 创建文本消息标签 */
     txtLabel = lv_label_create(anniversary_gui, NULL);
     lv_obj_add_style(txtLabel, LV_LABEL_PART_MAIN, &bigch_style);
-    lv_label_set_text(txtLabel, event_name);
 
     /* 创建天数标签 */
     dayLabel = lv_label_create(anniversary_gui, NULL);
     lv_obj_add_style(dayLabel, LV_LABEL_PART_MAIN, &numberBig_style);
     lv_label_set_recolor(dayLabel, true);
-    lv_label_set_text_fmt(dayLabel, "#ffa500 %02d#", (anniversary_day_count<0)?(-anniversary_day_count + 1):anniversary_day_count);
-
 
     /* 创建天了/天后btn */
     btn = lv_btn_create(anniversary_gui, NULL);
@@ -103,11 +100,18 @@ void display_anniversary(const char *file_name, lv_scr_load_anim_t anim_type, st
     /* 创建天了/天后btnLable */
     btnLabel = lv_label_create(btn, NULL);
     lv_obj_add_style(btnLabel, LV_LABEL_PART_MAIN, &smallch_style);
-    lv_label_set_text(btnLabel, (anniversary_day_count<0)?"天了":"天");
 
     /* 创建目标日标签 */
     targetDateLabel = lv_label_create(anniversary_gui, NULL);
     lv_obj_add_style(targetDateLabel, LV_LABEL_PART_MAIN, &chFont_style);
+}
+
+void display_anniversary(const char *file_name, lv_scr_load_anim_t anim_type, struct tm *target_date, int anniversary_day_count, const char *event_name)
+{
+    display_anniversary_init(anim_type);
+    lv_label_set_text(txtLabel, event_name);
+    lv_label_set_text_fmt(dayLabel, "#ffa500 %02d#", (anniversary_day_count<0)?(-anniversary_day_count + 1):anniversary_day_count);
+    lv_label_set_text(btnLabel, (anniversary_day_count<0)?"天了":"天");
     lv_label_set_recolor(targetDateLabel, true);
     if (target_date->tm_year != 0)
         lv_label_set_text_fmt(targetDateLabel, "#FFFFFF %d年%d月%d日#", target_date->tm_year, target_date->tm_mon, target_date->tm_mday);
@@ -137,6 +141,7 @@ void anniversary_gui_display_date(struct tm* target, int anniversary_day_count, 
 {
     lv_label_set_text(txtLabel, event_name);
     lv_label_set_text(btnLabel, (anniversary_day_count<0)?"天了":"天");
+    lv_obj_align(btn,dayLabel,LV_ALIGN_OUT_RIGHT_TOP,5,5);
     lv_label_set_text_fmt(dayLabel, "#ffa500 %02d#", (anniversary_day_count<0)?(-anniversary_day_count + 1):anniversary_day_count);
     lv_obj_align(dayLabel, NULL, LV_ALIGN_CENTER, -10, 20);
     if (target->tm_year != 0)
