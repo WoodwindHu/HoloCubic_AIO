@@ -20,9 +20,10 @@ struct HeartbeatAppForeverData
     char client_id[128];  // "hc_heart"
     char username[128];
     char passwd[128];
-    IPAddress mqtt_server; 
+    char mqtt_server_domain[128] = {0};
+    IPAddress mqtt_server_ip; 
     WiFiClient espClient; // 定义wifiClient实例
-    PubSubClient *mqtt_client; //(mqtt_server, 1883, callback, espClient);
+    PubSubClient *mqtt_client; //(mqtt_server_ip, 1883, callback, espClient);
     static void callback(char* topic, byte* payload, unsigned int length);
     void mqtt_reconnect();
 };
@@ -45,21 +46,32 @@ HeartbeatAppForeverData hb_cfg;
 
 static void write_config(HeartbeatAppForeverData *cfg)
 {
-    char tmp[16];
+    char tmp[128];
     String w_data;
-    w_data = w_data + cfg->mqtt_server.toString() + "\n";
-    memset(tmp, 0, 16);
-    snprintf(tmp, 16, "%s\n", cfg->subtopic);
+    if (strlen(cfg->mqtt_server_domain) > 0)
+    {
+        memset(tmp, 0, 128);
+        snprintf(tmp, 128, "%s\n", cfg->mqtt_server_domain);
+        w_data += tmp;
+    }
+    else 
+    {
+        w_data = w_data + cfg->mqtt_server_ip.toString() + "\n";
+    }
+    memset(tmp, 0, 128);
+    snprintf(tmp, 128, "%s\n", cfg->subtopic);
     w_data += tmp;
-    memset(tmp, 0, 16);
-    snprintf(tmp, 16, "%s\n", cfg->pubtopic);
+    memset(tmp, 0, 128);
+    snprintf(tmp, 128, "%s\n", cfg->pubtopic);
     w_data += tmp;
-    memset(tmp, 0, 16);
-    snprintf(tmp, 16, "%s\n", cfg->client_id);
+    memset(tmp, 0, 128);
+    snprintf(tmp, 128, "%s\n", cfg->client_id);
     w_data += tmp;
-    snprintf(tmp, 16, "%s\n", cfg->username);
+    memset(tmp, 0, 128);
+    snprintf(tmp, 128, "%s\n", cfg->username);
     w_data += tmp;
-    snprintf(tmp, 16, "%s\n", cfg->passwd);
+    memset(tmp, 0, 128);
+    snprintf(tmp, 128, "%s\n", cfg->passwd);
     w_data += tmp;
     g_flashCfg.writeFile(HEARTBEAT_CONFIG_PATH, w_data.c_str());
 }
@@ -71,7 +83,7 @@ static void read_config(HeartbeatAppForeverData *cfg)
 {
     // 如果有需要持久化配置文件 可以调用此函数将数据存在flash中
     // 配置文件名最好以APP名为开头 以".cfg"结尾，以免多个APP读取混乱
-    char info[128] = {0};
+    char info[1024] = {0};
     uint16_t size = g_flashCfg.readFile(HEARTBEAT_CONFIG_PATH, (uint8_t *)info);
     Serial.printf("size %d\n", size);
     info[size] = 0;
@@ -85,9 +97,18 @@ static void read_config(HeartbeatAppForeverData *cfg)
         // 解析数据
         char *param[6] = {0};
         analyseParam(info, 6, param);
-        cfg->mqtt_server.fromString(param[0]);
-        Serial.printf("mqtt_server %s", cfg->mqtt_server.toString().c_str());
-        Serial.println();
+        if (cfg->mqtt_server_ip.fromString(param[0]))
+        {
+            Serial.printf("mqtt_server_ip %s", cfg->mqtt_server_ip.toString().c_str());
+            Serial.println();
+            cfg->mqtt_server_domain[0] = 0;
+        }
+        else 
+        {
+            strcpy(cfg->mqtt_server_domain, param[0]);
+            Serial.printf("mqtt_server_domain %s", cfg->mqtt_server_domain);
+            Serial.println();
+        }
         strcpy(cfg->subtopic,param[1]);
         Serial.printf("subtopic %s", cfg->subtopic);
         Serial.println();
@@ -97,13 +118,21 @@ static void read_config(HeartbeatAppForeverData *cfg)
         strcpy(cfg->client_id, param[3]);
         Serial.printf("client_id %s", cfg->client_id);
         Serial.println();
-        strcpy(cfg->client_id, param[4]);
+        strcpy(cfg->username, param[4]);
         Serial.printf("username %s", cfg->username);
         Serial.println();
-        strcpy(cfg->client_id, param[5]);
+        strcpy(cfg->passwd, param[5]);
         Serial.printf("password %s", cfg->passwd);
         Serial.println();
-        cfg->mqtt_client = new PubSubClient(cfg->mqtt_server, 1883, cfg->callback, cfg->espClient);
+        if (strlen(cfg->mqtt_server_domain) > 0)
+        {
+            cfg->mqtt_client = new PubSubClient(cfg->mqtt_server_domain, 1883, cfg->callback, cfg->espClient);
+        }
+        else
+        {
+            cfg->mqtt_client = new PubSubClient(cfg->mqtt_server_ip, 1883, cfg->callback, cfg->espClient);
+        }
+        cfg->mqtt_client->setKeepAlive(60);
     }
 }
 
@@ -298,27 +327,34 @@ static void heartbeat_message_handle(const char *from, const char *to,
         char *param_key = (char *)message;
         if (!strcmp(param_key, "mqtt_server"))
         {
-            snprintf((char *)ext_info, 32, "%s", hb_cfg.mqtt_server.toString().c_str());
+            if (strlen(hb_cfg.mqtt_server_domain)>0)
+            {
+                snprintf((char *)ext_info, 128, "%s", hb_cfg.mqtt_server_domain);
+            }
+            else
+            {
+                snprintf((char *)ext_info, 128, "%s", hb_cfg.mqtt_server_ip.toString().c_str());
+            }
         }
         else if (!strcmp(param_key, "subtopic"))
         {
-            snprintf((char *)ext_info, 32, "%s", hb_cfg.subtopic);
+            snprintf((char *)ext_info, 128, "%s", hb_cfg.subtopic);
         }
         else if (!strcmp(param_key, "pubtopic"))
         {
-            snprintf((char *)ext_info, 32, "%s", hb_cfg.pubtopic);
+            snprintf((char *)ext_info, 128, "%s", hb_cfg.pubtopic);
         }
         else if (!strcmp(param_key, "client_id"))
         {
-            snprintf((char *)ext_info, 32, "%s", hb_cfg.client_id);
+            snprintf((char *)ext_info, 128, "%s", hb_cfg.client_id);
         }
         else if (!strcmp(param_key, "username"))
         {
-            snprintf((char *)ext_info, 32, "%s", hb_cfg.username);
+            snprintf((char *)ext_info, 128, "%s", hb_cfg.username);
         }
         else if (!strcmp(param_key, "passwd"))
         {
-            snprintf((char *)ext_info, 32, "%s", hb_cfg.passwd);
+            snprintf((char *)ext_info, 128, "%s", hb_cfg.passwd);
         }
     }
     break;
@@ -328,9 +364,18 @@ static void heartbeat_message_handle(const char *from, const char *to,
         char *param_val = (char *)ext_info;
         if (!strcmp(param_key, "mqtt_server"))
         {
-            hb_cfg.mqtt_server.fromString(param_val);
-            Serial.printf("mqtt_server %s", hb_cfg.mqtt_server.toString().c_str());
-            Serial.println();
+            if (hb_cfg.mqtt_server_ip.fromString(param_val))
+            {
+                Serial.printf("mqtt_server_ip %s", hb_cfg.mqtt_server_ip.toString().c_str());
+                Serial.println();
+                hb_cfg.mqtt_server_domain[0] = 0;
+            }
+            else 
+            {
+                strcpy(hb_cfg.mqtt_server_domain, param_val);
+                Serial.printf("mqtt_server_domain %s", hb_cfg.mqtt_server_domain);
+                Serial.println();
+            }
         }
         else if (!strcmp(param_key, "subtopic"))
         {
