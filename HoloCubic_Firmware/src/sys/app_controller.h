@@ -10,7 +10,7 @@
 #define CTRL_NAME "AppCtrl"
 #define APP_MAX_NUM 15             // 最大的可运行的APP数量
 #define WIFI_LIFE_CYCLE 60000      // wifi的生命周期（60s）
-#define MQTT_ALIVE_CYCLE 1000      // mqtt重连周期
+#define MQTT_ALIVE_CYCLE 2000      // mqtt重连周期
 #define EVENT_LIST_MAX_LENGTH 10   // 消息队列的容量
 #define APP_CONTROLLER_NAME_LEN 16 // app控制器的名字长度
 
@@ -60,6 +60,7 @@ public:
     void read_config(RgbConfig *cfg);
     void write_config(RgbConfig *cfg);
     void connect_mqtt(void);
+    void set_mqtt_status(int status);
 
 private:
     APP_OBJ *getAppByName(const char *name);

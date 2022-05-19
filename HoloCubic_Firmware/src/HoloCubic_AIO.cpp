@@ -131,6 +131,11 @@ void setup()
              app_controller->sys_cfg.auto_calibration_mpu,
              &app_controller->mpu_cfg); // 初始化比较耗时
 
+    if (app_controller->wifi_event(APP_MESSAGE_WIFI_CONN))
+    {
+        app_controller->connect_mqtt();
+    }
+
     /*** 以此作为MPU6050初始化完成的标志 ***/
     RgbConfig *rgb_cfg = &app_controller->rgb_cfg;
     // 初始化RGB灯 HSV色彩模式
@@ -142,7 +147,6 @@ void setup()
                             rgb_cfg->brightness_step, rgb_cfg->time};
     // 初始化RGB任务
     rgb_thread_init(&rgb_setting);
-
     // char info[128] = {0};
     // uint16_t size = g_flashCfg.readFile("/heartbeat.cfg", (uint8_t *)info);
     // if (size != 0) // 如果已经设置过heartbeat了，则开启mqtt客户端

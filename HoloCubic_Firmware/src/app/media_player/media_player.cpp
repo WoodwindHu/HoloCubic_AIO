@@ -178,6 +178,13 @@ static void media_player_process(AppController *sys,
 {
     if (RETURN == act_info->active)
     {
+        RgbParam rgb_setting = {LED_MODE_HSV,
+                            sys->rgb_cfg.min_value_0, sys->rgb_cfg.min_value_1, sys->rgb_cfg.min_value_2,
+                            sys->rgb_cfg.max_value_0, sys->rgb_cfg.max_value_1, sys->rgb_cfg.max_value_2,
+                            sys->rgb_cfg.step_0, sys->rgb_cfg.step_1, sys->rgb_cfg.step_2,
+                            sys->rgb_cfg.min_brightness, sys->rgb_cfg.max_brightness,
+                            sys->rgb_cfg.brightness_step, sys->rgb_cfg.time};
+        set_rgb(&rgb_setting);
         sys->app_exit(); // 退出APP
         return;
     }
@@ -278,12 +285,12 @@ static int media_player_exit_callback(void *param)
     run_data = NULL;
 
     // 恢复RGB灯  HSV色彩模式
-    RgbParam rgb_setting = {LED_MODE_HSV,
-                            1, 32, 255,
-                            255, 255, 255,
-                            1, 1, 1,
-                            0.15, 0.25, 0.001, 30};
-    set_rgb(&rgb_setting);
+    // RgbParam rgb_setting = {LED_MODE_HSV,
+    //                         1, 32, 255,
+    //                         255, 255, 255,
+    //                         1, 1, 1,
+    //                         0.15, 0.25, 0.001, 30};
+    // set_rgb(&rgb_setting);
 }
 
 static void media_player_message_handle(const char *from, const char *to,

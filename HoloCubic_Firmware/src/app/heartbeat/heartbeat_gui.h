@@ -17,7 +17,8 @@ enum S_R_TYPE{
         lv_task_handler(); //等待动画完成
 
     void heartbeat_gui_init(void);
-    void display_heartbeat(const char *file_name, lv_scr_load_anim_t anim_type);
+    void display_heartbeat_init(lv_scr_load_anim_t anim_type);
+    void display_heartbeat(const char *file_name, lv_scr_load_anim_t anim_type, uint8_t send_num, uint8_t recv_num);
     void heartbeat_gui_del(void);
     void heartbeat_obj_del(void);
     void display_heartbeat_img(void);

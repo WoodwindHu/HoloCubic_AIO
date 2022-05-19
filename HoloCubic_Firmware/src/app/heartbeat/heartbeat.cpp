@@ -23,7 +23,7 @@ struct HeartbeatAppForeverData
     char mqtt_server_domain[128] = {0};
     IPAddress mqtt_server_ip; 
     WiFiClient espClient; // 定义wifiClient实例
-    PubSubClient *mqtt_client; //(mqtt_server_ip, 1883, callback, espClient);
+    PubSubClient *mqtt_client = NULL; //(mqtt_server_ip, 1883, callback, espClient);
     static void callback(char* topic, byte* payload, unsigned int length);
     void mqtt_reconnect();
 };
@@ -124,15 +124,18 @@ static void read_config(HeartbeatAppForeverData *cfg)
         strcpy(cfg->passwd, param[5]);
         Serial.printf("password %s", cfg->passwd);
         Serial.println();
-        if (strlen(cfg->mqtt_server_domain) > 0)
+        if (cfg->mqtt_client == NULL)
         {
-            cfg->mqtt_client = new PubSubClient(cfg->mqtt_server_domain, 1883, cfg->callback, cfg->espClient);
+            if (strlen(cfg->mqtt_server_domain) > 0)
+            {
+                cfg->mqtt_client = new PubSubClient(cfg->mqtt_server_domain, 1883, cfg->callback, cfg->espClient);
+            }
+            else
+            {
+                cfg->mqtt_client = new PubSubClient(cfg->mqtt_server_ip, 1883, cfg->callback, cfg->espClient);
+            }
+            cfg->mqtt_client->setKeepAlive(60);
         }
-        else
-        {
-            cfg->mqtt_client = new PubSubClient(cfg->mqtt_server_ip, 1883, cfg->callback, cfg->espClient);
-        }
-        cfg->mqtt_client->setKeepAlive(60);
     }
 }
 
@@ -147,12 +150,14 @@ void HeartbeatAppForeverData::mqtt_reconnect()
         mqtt_client->subscribe(subtopic);
         Serial.printf("%s subcribed", subtopic);
         Serial.println();
+        app_controller->set_mqtt_status(1);
     } 
     else 
     {
         Serial.print("failed, rc=");
         Serial.print(mqtt_client->state());
         Serial.println();
+        app_controller->set_mqtt_status(0);
     }
 }
 
@@ -176,9 +181,8 @@ static HeartbeatAppRunData *run_data = NULL;
 static int heartbeat_init(void)
 {
     // 获取配置参数
-    read_config(&hb_cfg); 
+    // read_config(&hb_cfg);  // 已经读过了
     heartbeat_gui_init();
-    app_controller->connect_mqtt();
     // 初始化运行时参数
     run_data = (HeartbeatAppRunData *)calloc(1, sizeof(HeartbeatAppRunData));
     run_data->send_cnt = 0;
@@ -238,8 +242,8 @@ static void heartbeat_process(AppController *sys,
     }
     else if (GO_FORWORD == act_info->active) // 向前按发送一条消息
     {
-        anim_type = LV_SCR_LOAD_ANIM_MOVE_TOP;
-        if (hb_cfg.mqtt_client->connected()) 
+        // anim_type = LV_SCR_LOAD_ANIM_MOVE_TOP;
+        if (hb_cfg.mqtt_client->state() == MQTT_CONNECTED) 
         {
             run_data->send_cnt += 1;
             hb_cfg.mqtt_client->publish(hb_cfg.pubtopic, MQTT_SEND_MSG);
@@ -261,7 +265,7 @@ static void heartbeat_process(AppController *sys,
     {
         sys->send_to("Heartbeat", CTRL_NAME, APP_MESSAGE_WIFI_CONN, NULL, NULL);
         heartbeat_set_sr_type(SEND);
-        if (hb_cfg.mqtt_client->connected()) 
+        if (hb_cfg.mqtt_client->state() == MQTT_CONNECTED) 
         {
             run_data->send_cnt += 1;
             hb_cfg.mqtt_client->publish(hb_cfg.pubtopic, MQTT_SEND_MSG);
@@ -274,9 +278,9 @@ static void heartbeat_process(AppController *sys,
     //              APP_MESSAGE_WIFI_ALIVE, NULL, NULL);
 
     // 程序需要时可以适当加延时
-    display_heartbeat("heartbeat", anim_type);
-    heartbeat_set_send_recv_cnt_label(run_data->send_cnt, run_data->recv_cnt);
-    display_heartbeat_img();
+    display_heartbeat("heartbeat", anim_type, run_data->send_cnt, run_data->recv_cnt);
+    // heartbeat_set_send_recv_cnt_label(run_data->send_cnt, run_data->recv_cnt);
+    // display_heartbeat_img();
     delay(30);
 }
 
@@ -302,7 +306,7 @@ static void heartbeat_message_handle(const char *from, const char *to,
     case APP_MESSAGE_WIFI_CONN:
     {
         // Serial.println(F("MQTT keep alive"));
-        if (!hb_cfg.mqtt_client->connected()) {
+        if (hb_cfg.mqtt_client->state() != MQTT_CONNECTED) {
             hb_cfg.mqtt_reconnect();
         }
         hb_cfg.mqtt_client->loop(); // 开启mqtt客户端

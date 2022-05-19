@@ -94,7 +94,7 @@ void heartbeat_gui_init(void)
  * 其他函数请根据需要添加
  */
 
-void display_heartbeat(const char *file_name, lv_scr_load_anim_t anim_type)
+void display_heartbeat_init(lv_scr_load_anim_t anim_type)
 {
     lv_obj_t *act_obj = lv_scr_act(); // 获取当前活动页
     if (act_obj == heartbeat_gui)
@@ -112,10 +112,14 @@ void display_heartbeat(const char *file_name, lv_scr_load_anim_t anim_type)
     txtlabel = lv_label_create(heartbeat_gui, NULL);
     lv_obj_add_style(txtlabel, LV_LABEL_PART_MAIN, &chFont_style);
     lv_label_set_recolor(txtlabel, true);
+}
+
+void display_heartbeat(const char *file_name, lv_scr_load_anim_t anim_type, uint8_t send_num, uint8_t recv_num)
+{
+    display_heartbeat_init(anim_type);
 
     
-    lv_label_set_text_fmt(txtlabel, TEXT_TYPE0_FMT, 0, 0);
-    s_r_type = SEND;
+    heartbeat_set_send_recv_cnt_label(send_num, recv_num);
     display_heartbeat_img();
 
     // lv_obj_align(heartbeat_gui,NULL, LV_ALIGN_CENTER,0,0);
@@ -127,7 +131,7 @@ void display_heartbeat(const char *file_name, lv_scr_load_anim_t anim_type)
     // }
     // else
     // {
-        lv_scr_load(heartbeat_gui);
+    lv_scr_load(heartbeat_gui);
     // }
 }
 

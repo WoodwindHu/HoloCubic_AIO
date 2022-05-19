@@ -5,6 +5,8 @@
 #include "ESP32Time.h"
 #define TOMATO_APP_NAME "Tomato"
 
+extern AppController *app_controller; // APP控制器
+
 // 动态数据，APP的生命周期结束也需要释放它
 struct TomatoAppRunData
 {
@@ -48,20 +50,7 @@ static int tomato_init(void)
     run_data->rgb_fast_update = 0;
     run_data->switch_count = 0;
 
-    run_data->rgb_cfg.mode = 1;
-    run_data->rgb_cfg.min_value_0 = 1;
-    run_data->rgb_cfg.min_value_1 = 32;
-    run_data->rgb_cfg.min_value_2 = 255;
-    run_data->rgb_cfg.max_value_0 = 255;
-    run_data->rgb_cfg.max_value_1 = 255;
-    run_data->rgb_cfg.max_value_2 = 255;
-    run_data->rgb_cfg.step_0 = 1;
-    run_data->rgb_cfg.step_1 = 1;
-    run_data->rgb_cfg.step_2 = 1;
-    run_data->rgb_cfg.min_brightness = 0.15;
-    run_data->rgb_cfg.max_brightness = 0.25;
-    run_data->rgb_cfg.brightness_step = 0.001;
-    run_data->rgb_cfg.time = 30;
+    run_data->rgb_cfg = app_controller->rgb_cfg;
 
     run_data->rgb_setting = {LED_MODE_HSV,
                              run_data->rgb_cfg.min_value_0, run_data->rgb_cfg.min_value_1, run_data->rgb_cfg.min_value_2,
@@ -140,21 +129,7 @@ static void rgb_ctrl()
         }
         else
         {
-            run_data->rgb_cfg.mode = 1;
-            run_data->rgb_cfg.min_value_0 = 1;
-            run_data->rgb_cfg.min_value_1 = 32;
-            run_data->rgb_cfg.min_value_2 = 255;
-            run_data->rgb_cfg.max_value_0 = 255;
-            run_data->rgb_cfg.max_value_1 = 255;
-            run_data->rgb_cfg.max_value_2 = 255;
-            //  Serial.println("set low");
-            run_data->rgb_cfg.step_0 = 1;
-            run_data->rgb_cfg.step_1 = 1;
-            run_data->rgb_cfg.step_2 = 1;
-            run_data->rgb_cfg.min_brightness = 0.15;
-            run_data->rgb_cfg.max_brightness = 0.25;
-            run_data->rgb_cfg.brightness_step = 0.001;
-            run_data->rgb_cfg.time = 50;
+            run_data->rgb_cfg = app_controller->rgb_cfg;
         }
         run_data->rgb_setting = {LED_MODE_HSV,
                                  run_data->rgb_cfg.min_value_0, run_data->rgb_cfg.min_value_1, run_data->rgb_cfg.min_value_2,
@@ -169,21 +144,7 @@ static void rgb_ctrl()
 static void rgb_reset()
 {
 
-    run_data->rgb_cfg.mode = 1;
-    run_data->rgb_cfg.min_value_0 = 1;
-    run_data->rgb_cfg.min_value_1 = 32;
-    run_data->rgb_cfg.min_value_2 = 255;
-    run_data->rgb_cfg.max_value_0 = 255;
-    run_data->rgb_cfg.max_value_1 = 255;
-    run_data->rgb_cfg.max_value_2 = 255;
-    //  Serial.println("set low");
-    run_data->rgb_cfg.step_0 = 1;
-    run_data->rgb_cfg.step_1 = 1;
-    run_data->rgb_cfg.step_2 = 1;
-    run_data->rgb_cfg.min_brightness = 0.15;
-    run_data->rgb_cfg.max_brightness = 0.25;
-    run_data->rgb_cfg.brightness_step = 0.001;
-    run_data->rgb_cfg.time = 50;
+    run_data->rgb_cfg = app_controller->rgb_cfg;
     run_data->rgb_setting = {LED_MODE_HSV,
                              run_data->rgb_cfg.min_value_0, run_data->rgb_cfg.min_value_1, run_data->rgb_cfg.min_value_2,
                              run_data->rgb_cfg.max_value_0, run_data->rgb_cfg.max_value_1, run_data->rgb_cfg.max_value_2,
