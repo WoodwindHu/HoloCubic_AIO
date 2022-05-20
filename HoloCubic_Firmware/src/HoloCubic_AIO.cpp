@@ -33,6 +33,9 @@
 #include <SPIFFS.h>
 #include <esp32-hal.h>
 
+const String WDAY_NAMES[] = {"星期天", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"};                //星期
+const String MONTH_NAMES[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}; //月份
+
 /*** Component objects **7*/
 ImuAction *act_info;           // 存放mpu6050返回的数据
 AppController *app_controller; // APP控制器
@@ -50,6 +53,36 @@ void TaskLvglUpdate(void *parameter)
         delay(5);
     }
 }
+
+//time_t now; //实例化时间
+// void setClock()
+// {
+
+//   struct tm timeInfo; //声明一个结构体
+//   if (!getLocalTime(&timeInfo))
+//   { //一定要加这个条件判断，否则内存溢出
+//     Serial.println("Failed to obtain time");
+//     return;
+//   }
+//   //Serial.print(asctime(&timeInfo)); //默认打印格式：Mon Oct 25 11:13:29 2021
+//   String date = WDAY_NAMES[timeInfo.tm_wday];
+//   Serial.println(date.c_str());
+//   // sprintf_P(buff1, PSTR("%04d-%02d-%02d %s"), timeInfo.tm_year + 1900, timeInfo.tm_mon + 1, timeInfo.tm_mday, WDAY_NAMES[timeInfo.tm_wday].c_str());
+//   String shuju = String(timeInfo.tm_year + 1900); //年
+//   shuju += "-";
+//   shuju += timeInfo.tm_mon + 1; //月
+//   shuju += "-";
+//   shuju += timeInfo.tm_mday; //日
+//   shuju += " ";
+//   shuju += timeInfo.tm_hour; //时
+//   shuju += ":";
+//   shuju += timeInfo.tm_min;
+//   shuju += ":";
+//   shuju += timeInfo.tm_sec;
+//   shuju += " ";
+//   shuju += WDAY_NAMES[timeInfo.tm_wday].c_str(); //星期
+//   Serial.println(shuju.c_str());
+// }
 
 void setup()
 {
@@ -133,6 +166,7 @@ void setup()
 
     if (app_controller->wifi_event(APP_MESSAGE_WIFI_CONN))
     {
+        configTime(8 * 3600, 0, "ntp1.aliyun.com", "ntp2.aliyun.com", "ntp3.aliyun.com");
         app_controller->connect_mqtt();
     }
 
@@ -182,6 +216,7 @@ void loop()
         }
     }
 #endif
+    // setClock();
     app_controller->main_process(act_info); // 运行当前进程
     // Serial.println(ambLight.getLux() / 50.0);
     // rgb.setBrightness(ambLight.getLux() / 500.0);

@@ -6,6 +6,7 @@ extern "C"
 {
 #endif
 
+#include "time.h"
 #include "lvgl.h"
 enum S_R_TYPE{
     SEND = 0,
@@ -18,10 +19,10 @@ enum S_R_TYPE{
 
     void heartbeat_gui_init(void);
     void display_heartbeat_init(lv_scr_load_anim_t anim_type);
-    void display_heartbeat(const char *file_name, lv_scr_load_anim_t anim_type, uint8_t send_num, uint8_t recv_num);
+    void display_heartbeat(const char *file_name, lv_scr_load_anim_t anim_type, uint8_t send_num, uint8_t recv_num, struct tm *timeInfo);
     void heartbeat_gui_del(void);
     void heartbeat_obj_del(void);
-    void display_heartbeat_img(void);
+    void display_heartbeat_img(struct tm *timeInfo);
     void heartbeat_set_sr_type(enum S_R_TYPE type);
     void heartbeat_set_send_recv_cnt_label(uint8_t send_num, uint8_t recv_num);
 

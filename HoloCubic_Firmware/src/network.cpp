@@ -67,13 +67,24 @@ boolean Network::start_conn_wifi(const char *ssid, const char *password, const c
     // 修改主机名
     WiFi.setHostname(HOST_NAME);
     if (strcmp(ssid, "PKU")) {
-        WiFi.begin(ssid, password);
+        if (WL_CONNECT_FAILED == WiFi.begin(ssid, password))
+        {
+            return false;
+        }
         m_preDisWifiConnInfoMillis = millis();
+        for (int i = 0; i < 10 && WiFi.status() != WL_CONNECTED; ++i)
+        {
+            Serial.println("Trying to connect. Status is " + String(WiFi.status()));
+            delay(500);
+        }
         Serial.println(F("Wifi connected!"));
     } else { // 校园网
-        WiFi.begin(ssid);
+        if (WL_CONNECT_FAILED == WiFi.begin(ssid))
+        {
+            return false;
+        }
         m_preDisWifiConnInfoMillis = millis();
-        while (WiFi.status() != WL_CONNECTED)
+        for (int i = 0; i < 10 && WiFi.status() != WL_CONNECTED; ++i)
         {
             Serial.println("Trying to connect. Status is " + String(WiFi.status()));
             delay(500);
@@ -86,10 +97,17 @@ boolean Network::start_conn_wifi(const char *ssid, const char *password, const c
         String mac = WiFi.macAddress();
         Serial.println("mac address is: " + mac);
         IPGWClient clt(username, password, mac);
-        while (clt.connect() != IPGW_SUCC) {    
+        for (int i = 0; i < 3 && clt.connect() != IPGW_SUCC; ++i) {    
             delay(2000);
         }
-        Serial.println(F("IPGW logined!"));
+        if (clt.connect() != IPGW_SUCC)
+        {
+            return false;
+        }
+        else 
+        {
+            Serial.println(F("IPGW logined!"));
+        }
     }
 
     // if (!WiFi.config(local_ip, gateway, subnet, dns))

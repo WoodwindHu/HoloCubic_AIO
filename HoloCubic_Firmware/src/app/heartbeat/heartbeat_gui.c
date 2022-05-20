@@ -1,43 +1,71 @@
 #include "heartbeat_gui.h"
-#include "archerS_0000.h"
-#include "archerS_0001.h"
-#include "archerS_0002.h"
-#include "archerS_0003.h"
-#include "archerS_0004.h"
-#include "archerS_0005.h"
-#include "archerS_0006.h"
-#include "archerS_0007.h"
-#include "archerS_0008.h"
-#include "archerR_0000.h"
-#include "archerR_0001.h"
-#include "archerR_0002.h"
-#include "archerR_0003.h"
-#include "archerR_0004.h"
-#include "archerR_0005.h"
-#include "archerR_0006.h"
-#include "archerR_0007.h"
-#include "archerR_0008.h"
-#include "archerR_0009.h"
-#include "heart_0000.h"
-#include "heart_0001.h"
-#include "heart_0002.h"
-#include "heart_0003.h"
-#include "heart_0004.h"
-#include "heart_0005.h"
-#include "heart_0006.h"
-#include "heart_0007.h"
-#include "heart_0008.h"
-#include "heart_0009.h"
-#include "heart_0010.h"
-#include "heart_0011.h"
-#include "heart_0012.h"
-#include "heart_0013.h"
-#include "heart_0014.h"
-#include "heart_0015.h"
-#include "heart_0016.h"
-#include "heart_0017.h"
-#include "heart_0018.h"
-#include "heart_0019.h"
+#include "images/archerS_0000.h"
+#include "images/archerS_0001.h"
+#include "images/archerS_0002.h"
+#include "images/archerS_0003.h"
+#include "images/archerS_0004.h"
+#include "images/archerS_0005.h"
+#include "images/archerS_0006.h"
+#include "images/archerS_0007.h"
+#include "images/archerS_0008.h"
+#include "images/archerR_0000.h"
+#include "images/archerR_0001.h"
+#include "images/archerR_0002.h"
+#include "images/archerR_0003.h"
+#include "images/archerR_0004.h"
+#include "images/archerR_0005.h"
+#include "images/archerR_0006.h"
+#include "images/archerR_0007.h"
+#include "images/archerR_0008.h"
+#include "images/archerR_0009.h"
+#include "images/heart_0000.h"
+#include "images/heart_0001.h"
+#include "images/heart_0002.h"
+#include "images/heart_0003.h"
+#include "images/heart_0004.h"
+#include "images/heart_0005.h"
+#include "images/heart_0006.h"
+#include "images/heart_0007.h"
+#include "images/heart_0008.h"
+#include "images/heart_0009.h"
+#include "images/heart_0010.h"
+#include "images/heart_0011.h"
+#include "images/heart_0012.h"
+#include "images/heart_0013.h"
+#include "images/heart_0014.h"
+#include "images/heart_0015.h"
+#include "images/heart_0016.h"
+#include "images/heart_0017.h"
+#include "images/heart_0018.h"
+#include "images/heart_0019.h"
+#include "images/gif_520_1.h"   
+#include "images/gif_520_15.h"  
+#include "images/gif_520_21.h"  
+#include "images/gif_520_3.h"  
+#include "images/gif_520_9.h"   
+#include "images/gif_521_13.h"  
+#include "images/gif_521_19.h"  
+#include "images/gif_521_25.h"  
+#include "images/gif_521_3.h"  
+#include "images/gif_521_9.h"
+#include "images/gif_520_11.h"  
+#include "images/gif_520_17.h"  
+#include "images/gif_520_23.h"  
+#include "images/gif_520_5.h"  
+#include "images/gif_521_1.h"   
+#include "images/gif_521_15.h"  
+#include "images/gif_521_21.h"  
+#include "images/gif_521_27.h"  
+#include "images/gif_521_5.h"
+#include "images/gif_520_13.h"  
+#include "images/gif_520_19.h"  
+#include "images/gif_520_25.h"  
+#include "images/gif_520_7.h"  
+#include "images/gif_521_11.h"  
+#include "images/gif_521_17.h"  
+#include "images/gif_521_23.h"  
+#include "images/gif_521_29.h"  
+#include "images/gif_521_7.h"
 
 #include "driver/lv_port_indev.h"
 #include "lvgl.h"
@@ -49,6 +77,8 @@ LV_FONT_DECLARE(jb_monob_yahei_22);
 
 
 #define HEART_IMG_NUM 20
+#define G520_IMG_NUM 13
+#define G521_IMG_NUM 15
 #define RECV_IMG_NUM 10
 #define SEND_IMG_NUM 9
 
@@ -60,6 +90,8 @@ const void *heart_map[] = {&heart_0000, &heart_0001, &heart_0002, &heart_0003, &
                               &heart_0005, &heart_0006, &heart_0007, &heart_0008, &heart_0009,
                               &heart_0010, &heart_0011, &heart_0012, &heart_0013, &heart_0014,
                               &heart_0015, &heart_0016, &heart_0017, &heart_0018, &heart_0019,};
+const void *g520_map[] = {&gif_520_1,   &gif_520_13,  &gif_520_17,  &gif_520_21,  &gif_520_25,  &gif_520_5,  &gif_520_9,&gif_520_11,  &gif_520_15,  &gif_520_19,  &gif_520_23,  &gif_520_3,   &gif_520_7,};
+const void *g521_map[] = {&gif_521_1,  &gif_521_11,  &gif_521_13,  &gif_521_15,  &gif_521_17,  &gif_521_19,  &gif_521_21,  &gif_521_23,  &gif_521_25,  &gif_521_27,  &gif_521_29,  &gif_521_3,  &gif_521_5,  &gif_521_7,  &gif_521_9,};
 
 
 
@@ -114,13 +146,13 @@ void display_heartbeat_init(lv_scr_load_anim_t anim_type)
     lv_label_set_recolor(txtlabel, true);
 }
 
-void display_heartbeat(const char *file_name, lv_scr_load_anim_t anim_type, uint8_t send_num, uint8_t recv_num)
+void display_heartbeat(const char *file_name, lv_scr_load_anim_t anim_type, uint8_t send_num, uint8_t recv_num, struct tm *timeInfo)
 {
     display_heartbeat_init(anim_type);
 
     
     heartbeat_set_send_recv_cnt_label(send_num, recv_num);
-    display_heartbeat_img();
+    display_heartbeat_img(timeInfo);
 
     // lv_obj_align(heartbeat_gui,NULL, LV_ALIGN_CENTER,0,0);
     lv_obj_align(txtlabel,NULL, LV_ALIGN_IN_TOP_MID, 0, 15);
@@ -135,7 +167,7 @@ void display_heartbeat(const char *file_name, lv_scr_load_anim_t anim_type, uint
     // }
 }
 
-void display_heartbeat_img(void)
+void display_heartbeat_img(struct tm *timeInfo)
 {
     static int _beatIndex = 0;
     if (NULL != heartbeat_gui && lv_scr_act() == heartbeat_gui)
@@ -152,8 +184,21 @@ void display_heartbeat_img(void)
         }
         else
         {
-            _beatIndex = (_beatIndex + 1) % HEART_IMG_NUM;
-            lv_img_set_src(heartbeatImg, heart_map[_beatIndex]);
+            if (timeInfo->tm_mon + 1 == 5 && timeInfo->tm_mday == 20)
+            {
+                _beatIndex = (_beatIndex + 1) % G520_IMG_NUM;
+                lv_img_set_src(heartbeatImg, g520_map[_beatIndex]);
+            }
+            else if (timeInfo->tm_mon + 1 == 5 && timeInfo->tm_mday == 21)
+            {
+                _beatIndex = (_beatIndex + 1) % G521_IMG_NUM;
+                lv_img_set_src(heartbeatImg, g521_map[_beatIndex]);
+            }
+            else
+            {
+                _beatIndex = (_beatIndex + 1) % HEART_IMG_NUM;
+                lv_img_set_src(heartbeatImg, heart_map[_beatIndex]);
+            }
         }
         lv_obj_align(heartbeatImg,NULL, LV_ALIGN_CENTER, 0, 0);
         // lv_img_set_src(heartbeatImg,buf);  

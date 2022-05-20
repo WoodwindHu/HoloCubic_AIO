@@ -169,6 +169,7 @@ struct HeartbeatAppRunData
     uint8_t rgb_flag = 0; 
     unsigned long preTimestamp; 
     RgbParam rgb_setting; // rgb参数
+    struct tm timeInfo; //声明一个结构体
 };
 
 
@@ -181,7 +182,7 @@ static HeartbeatAppRunData *run_data = NULL;
 static int heartbeat_init(void)
 {
     // 获取配置参数
-    // read_config(&hb_cfg);  // 已经读过了
+    read_config(&hb_cfg);  // 已经读过了
     heartbeat_gui_init();
     // 初始化运行时参数
     run_data = (HeartbeatAppRunData *)calloc(1, sizeof(HeartbeatAppRunData));
@@ -276,9 +277,9 @@ static void heartbeat_process(AppController *sys,
     // 发送请求。如果是wifi相关的消息，当请求完成后自动会调用 heartbeat_message_handle 函数
     // sys->send_to(HEARTBEAT_APP_NAME, CTRL_NAME,
     //              APP_MESSAGE_WIFI_ALIVE, NULL, NULL);
-
+    getLocalTime(&run_data->timeInfo);
     // 程序需要时可以适当加延时
-    display_heartbeat("heartbeat", anim_type, run_data->send_cnt, run_data->recv_cnt);
+    display_heartbeat("heartbeat", anim_type, run_data->send_cnt, run_data->recv_cnt, &run_data->timeInfo);
     // heartbeat_set_send_recv_cnt_label(run_data->send_cnt, run_data->recv_cnt);
     // display_heartbeat_img();
     delay(30);
@@ -306,7 +307,7 @@ static void heartbeat_message_handle(const char *from, const char *to,
     case APP_MESSAGE_WIFI_CONN:
     {
         // Serial.println(F("MQTT keep alive"));
-        if (hb_cfg.mqtt_client->state() != MQTT_CONNECTED) {
+        if (!hb_cfg.mqtt_client->connected()) {
             hb_cfg.mqtt_reconnect();
         }
         hb_cfg.mqtt_client->loop(); // 开启mqtt客户端

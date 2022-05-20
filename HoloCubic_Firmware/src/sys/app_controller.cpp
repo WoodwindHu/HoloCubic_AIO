@@ -306,6 +306,7 @@ bool AppController::wifi_event(APP_MESSAGE_TYPE type)
         if ((WiFi.getMode() & WIFI_MODE_STA) == WIFI_MODE_STA && CONN_SUCC != g_network.end_conn_wifi())
         {
             // 在STA模式下 并且还没连接上wifi
+            Serial.println("wifi connected fail");
             return false;
         }
     }
