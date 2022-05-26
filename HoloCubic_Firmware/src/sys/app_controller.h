@@ -75,6 +75,7 @@ private:
     boolean m_wifi_status;            // 表示是wifi状态 true开启 false关闭
     boolean m_mqtt_status = 0;            // 表示是mqtt状态 true开启 false关闭
     unsigned long m_preWifiReqMillis; // 保存上一回请求的时间戳
+    unsigned long m_preMQTTReqMillis; // 保存上一回请求的时间戳
     unsigned int app_num;
     boolean app_exit_flag; // 表示是否退出APP应用
     int cur_app_index;     // 当前运行的APP下标

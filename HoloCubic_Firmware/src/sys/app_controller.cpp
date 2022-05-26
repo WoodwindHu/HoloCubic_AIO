@@ -119,10 +119,16 @@ int AppController::main_process(ImuAction *act_info)
         send_to(CTRL_NAME, CTRL_NAME, APP_MESSAGE_WIFI_DISCONN, 0, NULL);
     }
 
-    // 重连mqtt
+    // mqtt保持活跃
     if (1 == m_mqtt_status && doDelayMillisTime(MQTT_ALIVE_CYCLE, &m_preWifiReqMillis, false))
     {
         send_to("Heartbeat", CTRL_NAME, APP_MESSAGE_WIFI_CONN, 0, NULL);
+    }
+
+    //  每分钟尝试重连mqtt一次
+    if (0 == m_mqtt_status && doDelayMillisTime(60000, &m_preMQTTReqMillis, false)) 
+    {
+        m_mqtt_status = 1; 
     }
     if (0 == app_exit_flag)
     {
